@@ -233,6 +233,12 @@ const showSuccess = (data) => {
     
     if (countdownEl) countdownEl.style.display = 'none';
     
+    const manualBtn = document.getElementById('manualRedirectBtn');
+    if (manualBtn) {
+      manualBtn.href = data.redirect_url;
+      manualBtn.style.display = 'inline-flex';
+    }
+    
     // Redirect after 1.8 seconds (just enough time for confetti pop!)
     setTimeout(() => {
       window.location.href = data.redirect_url;
