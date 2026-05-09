@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Fun Night with Gemini</title>
+  <link rel="stylesheet" href="/css/style.css?v=2">
+  <style>
+    .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; }
+    .dashboard-container { display: none; width: 100%; max-width: 1200px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="logo-container">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285F4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z"/>
+      </svg>
+      <h1 class="title">Admin Dashboard</h1>
+    </a>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button id="logoutBtn" class="btn-secondary" style="display: none;">Logout</button>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+    </div>
+  </header>
+
+  <main style="align-items: flex-start; padding-top: 2rem;">
+    <!-- Login Screen -->
+    <div class="form-container glass login-container" id="loginContainer">
+      <h2>Admin Login</h2>
+      <form id="loginForm" style="width: 100%;">
+        <div class="input-group">
+          <label for="password">Enter Password</label>
+          <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <div id="loginError" class="error-msg"></div>
+        <button type="submit" class="primary-btn">Login to Dashboard</button>
+      </form>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard-container" id="dashboardContainer">
+      
+      <!-- Config Section -->
+      <div class="admin-section glass">
+        <h2>System Configuration</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.8;">Set the redirect URL after successful submission. Leave blank to show the default success message.</p>
+        <form id="configForm" class="config-form">
+          <input type="url" id="redirectUrl" placeholder="https://example.com/feedback-form">
+          <button type="submit" class="primary-btn">Save Changes</button>
+        </form>
+        <div id="configMsg" style="margin-top: 1rem; color: var(--gemini-green); font-weight: bold; display: none;">Configuration Saved Successfully!</div>
+      </div>
+
+      <!-- Data Section -->
+      <div class="admin-section glass">
+        <div class="actions">
+          <div class="actions-left">
+            <h2>Submissions Database</h2>
+          </div>
+          <div class="actions-right">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search USN or Name...">
+            <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
+            <a href="/api/export" class="btn-secondary" style="background: rgba(52, 168, 83, 0.15); border-color: var(--gemini-green);">📊 Export CSV</a>
+            <button id="clearDataBtn" class="btn-danger">⚠️ Clear All</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>USN</th>
+                <th>Name</th>
+                <th>Timestamp</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="5" style="text-align: center;">Loading data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Logs Section -->
+      <div class="admin-section glass">
+        <h2>Recent Activity Logs</h2>
+        <div class="table-wrapper">
+          <table style="font-size: 0.95rem;">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody">
+              <tr><td colspan="3" style="text-align: center;">Loading logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Clear Data Modal -->
+  <div class="modal" id="clearModal">
+    <div class="modal-content glass">
+      <span class="close-modal" id="closeClearModal">&times;</span>
+      <h2 style="color: var(--gemini-red); font-size: 1.8rem;">Clear All Data</h2>
+      <p style="margin-bottom: 1.5rem; line-height: 1.5; color: var(--text-color); opacity: 0.9;">Are you sure you want to delete all submissions? This action <strong>cannot be undone</strong>.</p>
+      <form id="clearForm">
+        <div class="input-group">
+          <label>Enter Admin Password to Confirm:</label>
+          <input type="password" id="clearPassword" required>
+        </div>
+        <div id="clearError" class="error-msg"></div>
+        <button type="submit" class="btn-danger" style="width: 100%; padding: 1.2rem; margin-top: 1rem; font-size: 1.1rem;">Confirm Permanent Delete</button>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>Fun Night with Gemini &copy; <span id="year"></span></p>
+  </footer>
+
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

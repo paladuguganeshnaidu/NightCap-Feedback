@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fun Night with Gemini - Feedback</title>
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+
+  <header>
+    <a href="/" class="logo-container">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285F4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z"/>
+      </svg>
+      <h1 class="title">Feedback Gateway</h1>
+    </a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+  </header>
+
+  <main>
+    <div class="form-container glass" id="formContainer">
+      <h2>Provide Your Feedback</h2>
+      <form id="feedbackForm">
+        <div class="input-group">
+          <label for="usn">University Seat Number (USN)</label>
+          <input type="text" id="usn" name="usn" placeholder="e.g. 1NC24CS150" required autocomplete="off">
+          <span class="branch-tag" id="branchTag">CS</span>
+          <div class="error-msg" id="usnError">Invalid USN format. Must be 1NC2 + digit + branch + 3 digits.</div>
+        </div>
+        
+        <div class="input-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" placeholder="John Doe" required>
+          <div class="error-msg" id="nameError">Name must contain only letters, spaces, or dots (max 100 chars).</div>
+        </div>
+
+        <div id="globalError" class="error-msg" style="margin-bottom: 1rem; text-align: center;"></div>
+
+        <button type="submit" class="primary-btn" id="submitBtn">
+          <span>Proceed to Feedback</span>
+          <div class="spinner" id="btnSpinner"></div>
+        </button>
+      </form>
+    </div>
+
+    <div class="success-state glass" id="successState">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24" style="width: 64px; height: 64px; margin-bottom: 1rem;">
+        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z"/>
+      </svg>
+      <h2 id="successMessage">Thank You!</h2>
+      <p id="redirectText">Redirecting in...</p>
+      <div class="countdown" id="countdown">3</div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Fun Night with Gemini &copy; <span id="year"></span></p>
+  </footer>
+
+  <!-- Audio Context for subtle blip -->
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

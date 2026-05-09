@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Public Data - Fun Night with Gemini</title>
+  <link rel="stylesheet" href="/css/style.css?v=2">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo-container">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285F4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z"/>
+      </svg>
+      <h1 class="title">Public Submissions</h1>
+    </a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+  </header>
+
+  <main style="align-items: flex-start;">
+    <div class="table-container glass">
+      <div class="actions">
+        <div class="actions-left">
+          <h2>Latest Feedback</h2>
+        </div>
+        <div class="actions-right">
+          <button id="refreshBtn" class="btn-secondary">🔄 Refresh Data</button>
+          <a href="/api/export" class="btn-secondary" style="background: rgba(52, 168, 83, 0.2); border-color: var(--gemini-green);">📊 Export to Excel</a>
+        </div>
+      </div>
+      
+      <div class="table-wrapper">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>USN</th>
+              <th>Name</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="4" style="text-align: center;">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Fun Night with Gemini &copy; <span id="year"></span></p>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  <script src="/js/data.js"></script>
+</body>
+</html>
