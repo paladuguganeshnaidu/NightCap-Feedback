@@ -221,21 +221,25 @@ const showSuccess = (data) => {
   createConfetti();
 
   if (data.redirect_url) {
-    let count = 3;
-    countdownEl.textContent = count;
+    redirectText.textContent = 'Preparing your feedback form...';
     redirectText.style.display = 'block';
-    countdownEl.style.display = 'block';
     
-    const interval = setInterval(() => {
-      count--;
-      countdownEl.textContent = count;
-      if (count <= 0) {
-        clearInterval(interval);
-        window.location.href = data.redirect_url;
-      }
-    }, 1000);
+    // Make the redirect text pulse beautifully
+    redirectText.style.animation = 'pulseCount 1.5s infinite';
+    redirectText.style.color = 'var(--gemini-purple)';
+    redirectText.style.fontWeight = '600';
+    redirectText.style.marginTop = '1.5rem';
+    redirectText.style.fontSize = '1.2rem';
+    
+    if (countdownEl) countdownEl.style.display = 'none';
+    
+    // Redirect after 1.8 seconds (just enough time for confetti pop!)
+    setTimeout(() => {
+      window.location.href = data.redirect_url;
+    }, 1800);
   } else {
     redirectText.textContent = 'You may close this tab.';
-    countdownEl.style.display = 'none';
+    redirectText.style.color = 'var(--text-color)';
+    if (countdownEl) countdownEl.style.display = 'none';
   }
 };

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fun Night with Gemini - Feedback</title>
   <link rel="stylesheet" href="/css/style.css?v=2">
 </head>
+
 <body>
   <canvas id="confetti-canvas"></canvas>
 
@@ -18,7 +20,7 @@
             <stop offset="100%" stop-color="#9b72cb" />
           </linearGradient>
         </defs>
-        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z"/>
+        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
       </svg>
       <h1 class="title">Feedback Gateway</h1>
     </a>
@@ -35,7 +37,7 @@
           <span class="branch-tag" id="branchTag">CS</span>
           <div class="error-msg" id="usnError">Invalid USN format. Must be 1NC2 + digit + branch + 3 digits.</div>
         </div>
-        
+
         <div class="input-group">
           <label for="name">Full Name</label>
           <input type="text" id="name" name="name" placeholder="John Doe" required>
@@ -53,11 +55,16 @@
 
     <div class="success-state glass" id="successState">
       <svg class="gemini-sparkle" viewBox="0 0 24 24" style="width: 64px; height: 64px; margin-bottom: 1rem;">
-        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z"/>
+        <defs>
+          <linearGradient id="gemini-grad-success" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285F4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#gemini-grad-success)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
       </svg>
       <h2 id="successMessage">Thank You!</h2>
-      <p id="redirectText">Redirecting in...</p>
-      <div class="countdown" id="countdown">3</div>
+      <p id="redirectText" style="display: none;">Complete Feedback for Certificate</p>
     </div>
   </main>
 
@@ -71,4 +78,5 @@
   </script>
   <script src="/js/main.js"></script>
 </body>
+
 </html>
