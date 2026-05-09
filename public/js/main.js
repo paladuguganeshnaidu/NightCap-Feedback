@@ -221,7 +221,7 @@ const showSuccess = (data) => {
   createConfetti();
 
   if (data.redirect_url) {
-    redirectText.textContent = 'Preparing your feedback form...';
+    redirectText.textContent = 'Complete Feedback for Certificate';
     redirectText.style.display = 'block';
     
     // Make the redirect text pulse beautifully
