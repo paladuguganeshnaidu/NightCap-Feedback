@@ -6,7 +6,6 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
-const nodemailer = require('nodemailer');
 
 dotenv.config();
 
@@ -391,49 +390,7 @@ app.get('/api/ar/export', (req, res) => {
   });
 });
 
-app.post('/api/ar/mail', authenticateARToken, async (req, res) => {
-  const { subject, body } = req.body;
-  if (!subject || !body) return res.status(400).json({ success: false, message: 'Subject and body are required' });
-
-  try {
-    const rows = db.prepare('SELECT email FROM registrations WHERE admin_gid = ?').all(req.user.gid);
-    const emails = rows.map(r => r.email).filter(e => e);
-    
-    if (emails.length === 0) return res.status(400).json({ success: false, message: 'No registered members with emails found' });
-
-    // Try to get SMTP config from env, or mock it
-    const smtpHost = process.env.SMTP_HOST || 'smtp.ethereal.email';
-    const smtpPort = process.env.SMTP_PORT || 587;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
-
-    if (!smtpUser || !smtpPass) {
-      // Simulate if not configured
-      console.log(`[Mock Mail] Sent to ${emails.length} users. Subject: ${subject}`);
-      return res.json({ success: true, message: `(Mock Mode) Sent mock email to ${emails.length} users. Setup SMTP in .env for real emails.` });
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      auth: { user: smtpUser, pass: smtpPass }
-    });
-
-    // Send emails in bcc or individually. For simplicity, send via bcc
-    await transporter.sendMail({
-      from: '"Fun Night with Gemini" <no-reply@funnight.com>',
-      bcc: emails.join(', '),
-      subject: subject,
-      text: body
-    });
-
-    logAction('AR Email Sent', `Admin ${req.user.gid} sent email to ${emails.length} users`);
-    res.json({ success: true, message: `Successfully sent email to ${emails.length} users.` });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to send emails.' });
-  }
-});
+// Removed /api/ar/mail as frontend opens Gmail directly
 
 // Delete Registration (Admin only)
 app.delete('/api/ar/registration/:id', authenticateARToken, (req, res) => {

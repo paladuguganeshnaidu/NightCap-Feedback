@@ -196,51 +196,36 @@ exportBtn.addEventListener('click', () => {
 });
 
 // Send Mail
-mailForm.addEventListener('submit', async (e) => {
+mailForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const btn = mailForm.querySelector('button');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-  mailMsg.style.display = 'none';
-
-  try {
-    const token = localStorage.getItem('arToken');
-    const res = await fetch('/api/ar/mail', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        subject: mailSubject.value,
-        body: mailBody.value
-      })
-    });
-    
-    if (res.status === 401 || res.status === 403) {
-      return logoutBtn.click();
-    }
-
-    const data = await res.json();
+  
+  if (currentData.length === 0) {
     mailMsg.style.display = 'block';
-    
-    if (data.success) {
-      mailMsg.textContent = data.message;
-      mailMsg.style.color = 'var(--gemini-green)';
-      mailSubject.value = '';
-      mailBody.value = '';
-    } else {
-      mailMsg.textContent = data.message || 'Failed to send';
-      mailMsg.style.color = 'var(--gemini-red)';
-    }
-  } catch (err) {
-    mailMsg.style.display = 'block';
-    mailMsg.textContent = 'Network error';
+    mailMsg.textContent = 'No registered members found.';
     mailMsg.style.color = 'var(--gemini-red)';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Send Mail';
+    return;
   }
+
+  const emails = currentData.map(r => r.email).filter(e => e).join(',');
+  if (!emails) {
+    mailMsg.style.display = 'block';
+    mailMsg.textContent = 'No email addresses found.';
+    mailMsg.style.color = 'var(--gemini-red)';
+    return;
+  }
+
+  const subject = encodeURIComponent(mailSubject.value);
+  const body = encodeURIComponent(mailBody.value);
+  
+  // Construct Gmail web compose URL with Bcc
+  const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${emails}&su=${subject}&body=${body}`;
+  
+  // Open in new tab
+  window.open(gmailLink, '_blank');
+
+  mailMsg.style.display = 'block';
+  mailMsg.textContent = 'Opened Gmail compose window!';
+  mailMsg.style.color = 'var(--gemini-green)';
 });
 
 // Init
