@@ -21,8 +21,22 @@
       </svg>
       <h1 class="title">GSA's 2026 Registration</h1>
     </a>
-    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </header>
+
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="menu-links">
+      <a href="/">Feedback Form</a>
+      <a href="/register.html">Registration</a>
+      <a href="/AR.html">AR Dashboard</a>
+      <a href="/xxxxxx.html">Super Admin</a>
+    </div>
+  </div>
 
   <main>
     <div class="form-container glass" id="formContainer">
@@ -56,10 +70,6 @@
           <label for="adminChoice">Select GSA</label>
           <select id="adminChoice" name="adminChoice" style="width: 100%; padding: 1rem; border-radius: 12px; border: 2px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: var(--text-color); font-family: 'Inter', sans-serif; font-size: 1.05rem;">
             <option value="" style="color: black;">Auto Assign(Random)</option>
-            <option value="3082" style="color: black;">Ganesh</option>
-            <option value="2633" style="color: black;">Aadya</option>
-            <option value="2579" style="color: black;">Amrutha</option>
-            <option value="2634" style="color: black;">Deekshitha</option>
           </select>
         </div>
 
@@ -95,5 +105,6 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
   <script src="/js/register.js"></script>
+  <script src="/js/menu.js"></script>
 </body>
 </html>
