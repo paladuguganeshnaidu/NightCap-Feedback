@@ -753,5 +753,19 @@ td {
 }
 
 @media (max-width: 600px) {
-  .menu-overlay { width: 100%; }
+  .menu-overlay { 
+    width: 250px;
+    height: auto;
+    bottom: auto;
+    top: 70px;
+    right: -100%;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    margin-right: 15px;
+    padding: 2rem 1.5rem;
+    box-shadow: 0 10px 40px var(--shadow-color);
+  }
+  .menu-overlay.open {
+    right: 0;
+  }
 }
