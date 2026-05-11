@@ -22,7 +22,7 @@
         </defs>
         <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
       </svg>
-      <h1 class="title">AR Dashboard <span id="headerAdminName"></span></h1>
+      <h1 class="title">Admin Dashboard <span id="headerAdminName"></span></h1>
     </a>
     <div style="display: flex; gap: 1rem; align-items: center;">
       <button id="logoutBtn" class="btn-secondary" style="display: none;">Logout</button>
@@ -68,8 +68,9 @@
       <!-- Data Section -->
       <div class="admin-section glass">
         <div class="actions">
-          <div class="actions-left">
+          <div class="actions-left" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
             <h2>Your Assigned Registrations (<span id="regCount">0</span>/30)</h2>
+            <input type="text" id="searchInput" placeholder="Search by Name or USN..." style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color); font-family: 'Inter', sans-serif;">
           </div>
           <div class="actions-right">
             <button id="refreshBtn" class="btn-secondary">🔄 Refresh</button>
