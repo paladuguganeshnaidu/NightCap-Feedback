@@ -30,6 +30,26 @@ const btnText = submitBtn.querySelector('span');
 const formContainer = document.getElementById('formContainer');
 const successState = document.getElementById('successState');
 const assignedAdminText = document.getElementById('assignedAdminText');
+const adminChoiceSelect = document.getElementById('adminChoice');
+
+// Fetch admins dynamically
+const loadAdmins = async () => {
+  if (!adminChoiceSelect) return;
+  try {
+    const res = await fetch('/api/admins');
+    const data = await res.json();
+    if (data.success) {
+      data.data.forEach(admin => {
+        const opt = document.createElement('option');
+        opt.value = admin.gid;
+        opt.textContent = admin.name;
+        opt.style.color = 'black';
+        adminChoiceSelect.appendChild(opt);
+      });
+    }
+  } catch(e) { console.error('Failed to load admins'); }
+};
+loadAdmins();
 
 // Validation Regex
 const usnRegex = /^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)\d{3}$/i;

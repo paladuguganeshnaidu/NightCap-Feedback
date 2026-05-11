@@ -38,6 +38,14 @@ db.exec(`
     registered_at TEXT DEFAULT (datetime('now', 'localtime'))
   );
   
+  CREATE TABLE IF NOT EXISTS admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    gid TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    password TEXT NOT NULL,
+    max_count INTEGER DEFAULT 30
+  );
+  
   CREATE TABLE IF NOT EXISTS config (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -60,6 +68,21 @@ const logAction = (action, details) => {
   }
 }
 
+// Seed admins if empty
+try {
+  const count = db.prepare('SELECT COUNT(*) as count FROM admins').get().count;
+  if (count === 0) {
+    const insertAdmin = db.prepare('INSERT INTO admins (gid, name, password, max_count) VALUES (?, ?, ?, ?)');
+    insertAdmin.run('3082', 'Ganesh', 'Admin1', 30);
+    insertAdmin.run('0000', 'Deekshitha R', 'Admin 2', 30);
+    insertAdmin.run('2633', 'Aadya', 'Admin3', 30);
+    insertAdmin.run('2579', 'Amrutha gowri', 'Admin3', 30);
+    insertAdmin.run('2634', 'Deekshitha G S', 'Admin 4', 30);
+  }
+} catch (e) {
+  console.error('Failed to seed admins', e);
+}
+
 // Middleware
 // helmet configuration to allow inline styles/scripts and assets for a simple local app setup
 app.use(helmet({
@@ -75,13 +98,7 @@ const submitLimiter = rateLimit({
   message: { success: false, message: 'Too many requests from this IP, please try again after a minute' }
 });
 
-const ADMIN_LIST = [
-  { gid: '3082', name: 'Ganesh', password: 'Admin1', max: 30 },
-  { gid: '0000', name: 'Deekshitha R', password: 'Admin 2', max: 30 },
-  { gid: '2633', name: 'Aadya', password: 'Admin3', max: 30 },
-  { gid: '2579', name: 'Amrutha gowri', password: 'Admin3', max: 30 },
-  { gid: '2634', name: 'Deekshitha G S', password: 'Admin 4', max: 30 }
-];
+// Removed hardcoded ADMIN_LIST
 
 // Admin Auth Middleware
 const authenticateToken = (req, res, next) => {
@@ -266,13 +283,14 @@ app.post('/api/register', submitLimiter, (req, res) => {
 
   try {
     let assignedGid = null;
+    let chosenAdmin = null;
     
     // If user explicitly chose an admin
     if (adminChoice && adminChoice !== "") {
-      const chosenAdmin = ADMIN_LIST.find(a => a.gid === adminChoice);
+      chosenAdmin = db.prepare('SELECT * FROM admins WHERE gid = ?').get(adminChoice);
       if (chosenAdmin) {
         const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(chosenAdmin.gid).count;
-        if (count < chosenAdmin.max) {
+        if (count < chosenAdmin.max_count) {
           assignedGid = chosenAdmin.gid;
         } else {
           return res.status(400).json({ success: false, message: `Admin ${chosenAdmin.name} has reached the max limit. Please choose another or select Random.` });
@@ -284,10 +302,11 @@ app.post('/api/register', submitLimiter, (req, res) => {
     if (!assignedGid) {
       let minCount = 31; // More than max
       
+      const adminList = db.prepare('SELECT * FROM admins ORDER BY id ASC').all();
       // Find the admin with the minimum registrations, preferring the original order if tied
-      for (const admin of ADMIN_LIST) {
+      for (const admin of adminList) {
         const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
-        if (count < admin.max && count < minCount) {
+        if (count < admin.max_count && count < minCount) {
           minCount = count;
           assignedGid = admin.gid;
         }
@@ -298,7 +317,7 @@ app.post('/api/register', submitLimiter, (req, res) => {
       return res.status(400).json({ success: false, message: 'Registration is full. No available slots.' });
     }
 
-    const adminInfo = ADMIN_LIST.find(a => a.gid === assignedGid);
+    const adminInfo = db.prepare('SELECT * FROM admins WHERE gid = ?').get(assignedGid);
 
     const stmt = db.prepare('INSERT INTO registrations (usn, name, mobile, email, department, admin_gid) VALUES (?, ?, ?, ?, ?, ?)');
     stmt.run(usn.toUpperCase(), name.trim(), mobile.trim(), email.trim(), department, assignedGid);
@@ -315,7 +334,7 @@ app.post('/api/register', submitLimiter, (req, res) => {
 // --- AR ADMIN ROUTES ---
 app.post('/api/ar/login', (req, res) => {
   const { gid, password } = req.body;
-  const adminInfo = ADMIN_LIST.find(a => a.gid === gid && a.password === password);
+  const adminInfo = db.prepare('SELECT * FROM admins WHERE gid = ? AND password = ?').get(gid, password);
   
   if (adminInfo) {
     const token = jwt.sign({ gid: adminInfo.gid, name: adminInfo.name }, JWT_SECRET, { expiresIn: '12h' });
@@ -432,4 +451,45 @@ app.delete('/api/ar/registration/:id', authenticateARToken, (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: 'Database error.' });
   }
+});
+
+// --- PUBLIC ROUTE TO FETCH ADMINS ---
+app.get('/api/admins', (req, res) => {
+  try {
+    const rows = db.prepare('SELECT gid, name, max_count FROM admins ORDER BY id ASC').all();
+    res.json({ success: true, data: rows });
+  } catch(e) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// --- SUPER ADMIN ROUTES TO MANAGE AR ADMINS ---
+app.get('/api/super/admins', authenticateToken, (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM admins ORDER BY id ASC').all();
+    res.json({ success: true, data: rows });
+  } catch(e) { res.status(500).json({ success: false }); }
+});
+
+app.post('/api/super/admins', authenticateToken, (req, res) => {
+  const { gid, name, password, max_count } = req.body;
+  try {
+    db.prepare('INSERT INTO admins (gid, name, password, max_count) VALUES (?, ?, ?, ?)').run(gid, name, password, max_count || 30);
+    res.json({ success: true, message: 'Admin added successfully' });
+  } catch(e) { res.status(500).json({ success: false, message: 'GID already exists or invalid data' }); }
+});
+
+app.put('/api/super/admins/:id', authenticateToken, (req, res) => {
+  const { gid, name, password, max_count } = req.body;
+  try {
+    db.prepare('UPDATE admins SET gid=?, name=?, password=?, max_count=? WHERE id=?').run(gid, name, password, max_count, req.params.id);
+    res.json({ success: true, message: 'Admin updated successfully' });
+  } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
+});
+
+app.delete('/api/super/admins/:id', authenticateToken, (req, res) => {
+  try {
+    db.prepare('DELETE FROM admins WHERE id=?').run(req.params.id);
+    res.json({ success: true, message: 'Admin deleted successfully' });
+  } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
 });

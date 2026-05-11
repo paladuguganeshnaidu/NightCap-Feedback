@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Admin Manager</title>
+  <link rel="stylesheet" href="/css/style.css?v=5">
+  <style>
+    .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; max-width: 450px; margin: 4rem auto; }
+    .dashboard-container { display: none; width: 100%; max-width: 1200px; margin: 0 auto; }
+    .admin-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 600px) { .admin-form { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="logo-container">
+      <h1 class="title">Super Admin Manager</h1>
+    </a>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button id="logoutBtn" class="btn-secondary" style="display: none;">Logout</button>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+    </div>
+  </header>
+
+  <main style="align-items: flex-start; padding-top: 2rem;">
+    <!-- Login Screen -->
+    <div class="form-container glass login-container" id="loginContainer">
+      <h2>Super Admin Login</h2>
+      <p style="margin-bottom: 1.5rem; text-align: center; color: var(--text-color); opacity: 0.8;">Enter the master admin password.</p>
+      <form id="loginForm" style="width: 100%;">
+        <div class="input-group">
+          <label for="password">Master Password</label>
+          <input type="password" id="password" required>
+        </div>
+        <div id="loginError" class="error-msg"></div>
+        <button type="submit" class="primary-btn">Login</button>
+      </form>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard-container" id="dashboardContainer">
+      <h2 style="margin-bottom: 2rem; color: var(--gemini-blue);">Manage AR Admins</h2>
+      
+      <!-- Add/Edit Admin Section -->
+      <div class="admin-section glass">
+        <h2 id="formTitle">Add New Admin</h2>
+        <form id="adminForm" style="margin-top: 1rem;">
+          <input type="hidden" id="editId" value="">
+          <div class="admin-form">
+            <div class="input-group">
+              <label>GID</label>
+              <input type="text" id="adminGid" required>
+            </div>
+            <div class="input-group">
+              <label>Name</label>
+              <input type="text" id="adminName" required>
+            </div>
+            <div class="input-group">
+              <label>Password</label>
+              <input type="text" id="adminPassword" required>
+            </div>
+            <div class="input-group">
+              <label>Max Registrations</label>
+              <input type="number" id="adminMax" value="30" required>
+            </div>
+          </div>
+          <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="primary-btn" id="saveBtn">Save Admin</button>
+            <button type="button" class="btn-secondary" id="cancelEditBtn" style="display: none;">Cancel</button>
+          </div>
+          <div id="formMsg" style="margin-top: 1rem; font-weight: bold; display: none;"></div>
+        </form>
+      </div>
+
+      <!-- Admin List Section -->
+      <div class="admin-section glass">
+        <div class="actions">
+          <h2>Current Admins</h2>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="dataTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>GID</th>
+                <th>Name</th>
+                <th>Password</th>
+                <th>Max Limit</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="6" style="text-align: center;">Loading data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/xxxxxx.js"></script>
+</body>
+</html>
