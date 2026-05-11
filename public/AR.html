@@ -6,7 +6,7 @@
   <title>AR Dashboard - Fun Night with Gemini</title>
   <link rel="stylesheet" href="/css/style.css?v=4">
   <style>
-    .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; }
+    .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; max-width: 450px; margin: 4rem auto; }
     .dashboard-container { display: none; width: 100%; max-width: 1200px; margin: 0 auto; }
   </style>
 </head>
@@ -39,6 +39,10 @@
         <div class="input-group">
           <label for="gid">Enter GID</label>
           <input type="text" id="gid" placeholder="e.g. 3082" required>
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="••••••••" required>
         </div>
         <div id="loginError" class="error-msg"></div>
         <button type="submit" class="primary-btn">Login to Dashboard</button>
@@ -84,10 +88,11 @@
                 <th>Email</th>
                 <th>Dept</th>
                 <th>Time</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="7" style="text-align: center;">Loading data...</td></tr>
+              <tr><td colspan="8" style="text-align: center;">Loading data...</td></tr>
             </tbody>
           </table>
         </div>

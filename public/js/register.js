@@ -178,7 +178,8 @@ const createConfetti = () => {
 const showSuccess = (data) => {
   formContainer.style.display = 'none';
   successState.classList.add('show');
-  assignedAdminText.textContent = data.message;
+  document.getElementById('successMessage').textContent = 'Added to waiting list';
+  assignedAdminText.innerHTML = `We will get back soon.<br><span style="font-size: 0.9rem; opacity: 0.8; font-weight: normal;">Check confirmation mail in inbox & spam</span>`;
   
   createConfetti();
 };
@@ -193,6 +194,7 @@ form.addEventListener('submit', async (e) => {
   const name = nameInput.value;
   const mobile = mobileInput.value;
   const email = emailInput.value;
+  const adminChoice = document.getElementById('adminChoice') ? document.getElementById('adminChoice').value : '';
 
   let isValid = true;
   if (!usnRegex.test(usn)) { usnError.classList.add('show'); isValid = false; }
@@ -209,7 +211,7 @@ form.addEventListener('submit', async (e) => {
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usn, name, mobile, email })
+      body: JSON.stringify({ usn, name, mobile, email, adminChoice })
     });
 
     const data = await res.json();

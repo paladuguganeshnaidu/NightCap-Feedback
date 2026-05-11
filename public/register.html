@@ -30,15 +30,15 @@
       <form id="registrationForm">
         <div class="input-group">
           <label for="usn">University Seat Number (USN)</label>
-          <input type="text" id="usn" name="usn" placeholder="e.g. 1NC24CS150" required autocomplete="off">
+          <input type="text" id="usn" name="usn" placeholder="USN" required autocomplete="off">
           <span class="branch-tag" id="branchTag">CS</span>
-          <div class="error-msg" id="usnError">Invalid USN format. Must be 1NC2 + digit + branch + 3 digits.</div>
+          <div class="error-msg" id="usnError">Invalid USN</div>
         </div>
 
         <div class="input-group">
           <label for="name">Full Name</label>
           <input type="text" id="name" name="name" placeholder="John Doe" required>
-          <div class="error-msg" id="nameError">Name must contain only letters, spaces, or dots (max 100 chars).</div>
+          <div class="error-msg" id="nameError">Invalid Name</div>
         </div>
         
         <div class="input-group">
@@ -52,10 +52,22 @@
           <input type="email" id="email" name="email" placeholder="john@example.com" required>
         </div>
 
+        <div class="input-group">
+          <label for="adminChoice">Select Admin (Optional)</label>
+          <select id="adminChoice" name="adminChoice" style="width: 100%; padding: 1rem; border-radius: 12px; border: 2px solid var(--border-color); background: rgba(0, 0, 0, 0.2); color: var(--text-color); font-family: 'Inter', sans-serif; font-size: 1.05rem;">
+            <option value="" style="color: black;">Random (Default)</option>
+            <option value="3082" style="color: black;">Ganesh</option>
+            <option value="0000" style="color: black;">Deekshitha R</option>
+            <option value="2633" style="color: black;">Aadya</option>
+            <option value="2579" style="color: black;">Amrutha gowri</option>
+            <option value="2634" style="color: black;">Deekshitha G S</option>
+          </select>
+        </div>
+
         <div id="globalError" class="error-msg" style="margin-bottom: 1rem; text-align: center;"></div>
 
         <button type="submit" class="primary-btn" id="submitBtn">
-          <span>Complete Registration</span>
+          <span>Submit Request</span>
           <div class="spinner" id="btnSpinner"></div>
         </button>
       </form>

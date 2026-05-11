@@ -76,10 +76,11 @@ const submitLimiter = rateLimit({
 });
 
 const ADMIN_LIST = [
-  { gid: '3082', name: 'Ganesh', max: 30 },
-  { gid: '2633', name: 'Aadya', max: 30 },
-  { gid: '2579', name: 'Amrutha', max: 30 },
-  { gid: '2634', name: 'Deekshitha', max: 30 }
+  { gid: '3082', name: 'Ganesh', password: 'Admin1', max: 30 },
+  { gid: '0000', name: 'Deekshitha R', password: 'Admin 2', max: 30 },
+  { gid: '2633', name: 'Aadya', password: 'Admin3', max: 30 },
+  { gid: '2579', name: 'Amrutha gowri', password: 'Admin3', max: 30 },
+  { gid: '2634', name: 'Deekshitha G S', password: 'Admin 4', max: 30 }
 ];
 
 // Admin Auth Middleware
@@ -252,7 +253,7 @@ app.listen(PORT, () => {
 
 // --- NEW REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, (req, res) => {
-  const { usn, name, mobile, email } = req.body;
+  const { usn, name, mobile, email, adminChoice } = req.body;
   if (!usn || !name || !mobile || !email) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
@@ -264,16 +265,32 @@ app.post('/api/register', submitLimiter, (req, res) => {
   const department = match[1].toUpperCase();
 
   try {
-    // Check total assigned to each admin to find the next available one
     let assignedGid = null;
-    let minCount = 31; // More than max
     
-    // Find the admin with the minimum registrations, preferring the original order if tied
-    for (const admin of ADMIN_LIST) {
-      const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
-      if (count < admin.max && count < minCount) {
-        minCount = count;
-        assignedGid = admin.gid;
+    // If user explicitly chose an admin
+    if (adminChoice && adminChoice !== "") {
+      const chosenAdmin = ADMIN_LIST.find(a => a.gid === adminChoice);
+      if (chosenAdmin) {
+        const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(chosenAdmin.gid).count;
+        if (count < chosenAdmin.max) {
+          assignedGid = chosenAdmin.gid;
+        } else {
+          return res.status(400).json({ success: false, message: `Admin ${chosenAdmin.name} has reached the max limit. Please choose another or select Random.` });
+        }
+      }
+    }
+
+    // If no explicit choice or Random, auto-assign
+    if (!assignedGid) {
+      let minCount = 31; // More than max
+      
+      // Find the admin with the minimum registrations, preferring the original order if tied
+      for (const admin of ADMIN_LIST) {
+        const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
+        if (count < admin.max && count < minCount) {
+          minCount = count;
+          assignedGid = admin.gid;
+        }
       }
     }
 
@@ -297,15 +314,15 @@ app.post('/api/register', submitLimiter, (req, res) => {
 
 // --- AR ADMIN ROUTES ---
 app.post('/api/ar/login', (req, res) => {
-  const { gid } = req.body;
-  const adminInfo = ADMIN_LIST.find(a => a.gid === gid);
+  const { gid, password } = req.body;
+  const adminInfo = ADMIN_LIST.find(a => a.gid === gid && a.password === password);
   
   if (adminInfo) {
     const token = jwt.sign({ gid: adminInfo.gid, name: adminInfo.name }, JWT_SECRET, { expiresIn: '12h' });
     logAction('AR Login', `AR Admin ${adminInfo.name} (${gid}) logged in`);
     res.json({ success: true, token, name: adminInfo.name });
   } else {
-    res.status(401).json({ success: false, message: 'Invalid GID' });
+    res.status(401).json({ success: false, message: 'Invalid GID or Password' });
   }
 });
 
@@ -396,5 +413,23 @@ app.post('/api/ar/mail', authenticateARToken, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to send emails.' });
+  }
+});
+
+// Delete Registration (Admin only)
+app.delete('/api/ar/registration/:id', authenticateARToken, (req, res) => {
+  const id = req.params.id;
+  try {
+    const stmt = db.prepare('DELETE FROM registrations WHERE id = ? AND admin_gid = ?');
+    const info = stmt.run(id, req.user.gid);
+    
+    if (info.changes > 0) {
+      logAction('Delete Registration', `AR Admin ${req.user.gid} deleted registration ID: ${id}`);
+      res.json({ success: true, message: 'Registration removed successfully.' });
+    } else {
+      res.status(404).json({ success: false, message: 'Registration not found or you do not have permission to delete it.' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
   }
 });

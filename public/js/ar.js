@@ -15,6 +15,7 @@ const loginContainer = document.getElementById('loginContainer');
 const dashboardContainer = document.getElementById('dashboardContainer');
 const loginForm = document.getElementById('loginForm');
 const gidInput = document.getElementById('gid');
+const passwordInput = document.getElementById('password');
 const loginError = document.getElementById('loginError');
 const logoutBtn = document.getElementById('logoutBtn');
 
@@ -70,7 +71,7 @@ loginForm.addEventListener('submit', async (e) => {
     const res = await fetch('/api/ar/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gid: gidInput.value.trim() })
+      body: JSON.stringify({ gid: gidInput.value.trim(), password: passwordInput.value.trim() })
     });
     const data = await res.json();
     if (res.ok && data.success) {
@@ -122,7 +123,7 @@ const fetchData = async () => {
 
 const renderTable = (rows) => {
   if (rows.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No registrations assigned to you yet.</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No registrations assigned to you yet.</td></tr>';
     return;
   }
   
@@ -135,8 +136,28 @@ const renderTable = (rows) => {
       <td>${r.email}</td>
       <td><span class="branch-tag show" style="position: static; transform: none; display: inline-block;">${r.department}</span></td>
       <td style="font-size: 0.85rem; opacity: 0.8;">${new Date(r.registered_at).toLocaleString()}</td>
+      <td><button class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-color: var(--gemini-red); color: var(--gemini-red);" onclick="removeRegistration(${r.id})">Remove</button></td>
     </tr>
   `).join('');
+};
+
+window.removeRegistration = async (id) => {
+  if (!confirm('Are you sure you want to remove this registration?')) return;
+  const token = localStorage.getItem('arToken');
+  try {
+    const res = await fetch(`/api/ar/registration/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      fetchData(); // Refresh the table
+    } else {
+      alert(data.message || 'Failed to remove registration');
+    }
+  } catch (err) {
+    alert('Network error');
+  }
 };
 
 refreshBtn.addEventListener('click', fetchData);
