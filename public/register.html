@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Registration - Fun Night with Gemini</title>
+  <link rel="stylesheet" href="/css/style.css?v=3">
+</head>
+<body>
+  <canvas id="confetti-canvas"></canvas>
+  <header>
+    <a href="/" class="logo-container">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285F4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
+      </svg>
+      <h1 class="title">GSA's 2026 Registration</h1>
+    </a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+  </header>
+
+  <main>
+    <div class="form-container glass" id="formContainer">
+      <h2>Register for Event</h2>
+      <form id="registrationForm">
+        <div class="input-group">
+          <label for="usn">University Seat Number (USN)</label>
+          <input type="text" id="usn" name="usn" placeholder="e.g. 1NC24CS150" required autocomplete="off">
+          <span class="branch-tag" id="branchTag">CS</span>
+          <div class="error-msg" id="usnError">Invalid USN format. Must be 1NC2 + digit + branch + 3 digits.</div>
+        </div>
+
+        <div class="input-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" name="name" placeholder="John Doe" required>
+          <div class="error-msg" id="nameError">Name must contain only letters, spaces, or dots (max 100 chars).</div>
+        </div>
+        
+        <div class="input-group">
+          <label for="mobile">Mobile Number</label>
+          <input type="tel" id="mobile" name="mobile" placeholder="10-digit mobile number" required pattern="^[0-9]{10}$">
+          <div class="error-msg" id="mobileError">Must be exactly 10 digits.</div>
+        </div>
+
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="john@example.com" required>
+        </div>
+
+        <div id="globalError" class="error-msg" style="margin-bottom: 1rem; text-align: center;"></div>
+
+        <button type="submit" class="primary-btn" id="submitBtn">
+          <span>Complete Registration</span>
+          <div class="spinner" id="btnSpinner"></div>
+        </button>
+      </form>
+    </div>
+
+    <div class="success-state glass" id="successState">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24" style="width: 64px; height: 64px; margin-bottom: 1rem;">
+        <defs>
+          <linearGradient id="gemini-grad-success" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285F4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#gemini-grad-success)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
+      </svg>
+      <h2 id="successMessage">Registered Successfully!</h2>
+      <p id="assignedAdminText" style="margin-top: 1rem; font-size: 1.1rem; color: var(--gemini-green); font-weight: 600;"></p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Fun Night with Gemini &copy; <span id="year"></span></p>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+  <script src="/js/register.js"></script>
+</body>
+</html>

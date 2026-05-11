@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
+const nodemailer = require('nodemailer');
 
 dotenv.config();
 
@@ -24,6 +25,17 @@ db.exec(`
     usn TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     submitted_at TEXT DEFAULT (datetime('now', 'localtime'))
+  );
+  
+  CREATE TABLE IF NOT EXISTS registrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usn TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    mobile TEXT NOT NULL,
+    email TEXT NOT NULL,
+    department TEXT NOT NULL,
+    admin_gid TEXT NOT NULL,
+    registered_at TEXT DEFAULT (datetime('now', 'localtime'))
   );
   
   CREATE TABLE IF NOT EXISTS config (
@@ -62,6 +74,13 @@ const submitLimiter = rateLimit({
   max: 5, // 5 requests per IP
   message: { success: false, message: 'Too many requests from this IP, please try again after a minute' }
 });
+
+const ADMIN_LIST = [
+  { gid: '3082', name: 'Ganesh', max: 30 },
+  { gid: '2633', name: 'Aadya', max: 30 },
+  { gid: '2579', name: 'Amrutha', max: 30 },
+  { gid: '2634', name: 'Deekshitha', max: 30 }
+];
 
 // Admin Auth Middleware
 const authenticateToken = (req, res, next) => {
@@ -229,4 +248,153 @@ app.get('/api/admin/logs', authenticateToken, (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// --- NEW REGISTRATION ROUTES ---
+app.post('/api/register', submitLimiter, (req, res) => {
+  const { usn, name, mobile, email } = req.body;
+  if (!usn || !name || !mobile || !email) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
+  }
+
+  const usnRegex = /^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)\d{3}$/i;
+  const match = usn.toUpperCase().match(usnRegex);
+  if (!match) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
+  
+  const department = match[1].toUpperCase();
+
+  try {
+    // Check total assigned to each admin to find the next available one
+    let assignedGid = null;
+    let minCount = 31; // More than max
+    
+    // Find the admin with the minimum registrations, preferring the original order if tied
+    for (const admin of ADMIN_LIST) {
+      const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
+      if (count < admin.max && count < minCount) {
+        minCount = count;
+        assignedGid = admin.gid;
+      }
+    }
+
+    if (!assignedGid) {
+      return res.status(400).json({ success: false, message: 'Registration is full. No available slots.' });
+    }
+
+    const adminInfo = ADMIN_LIST.find(a => a.gid === assignedGid);
+
+    const stmt = db.prepare('INSERT INTO registrations (usn, name, mobile, email, department, admin_gid) VALUES (?, ?, ?, ?, ?, ?)');
+    stmt.run(usn.toUpperCase(), name.trim(), mobile.trim(), email.trim(), department, assignedGid);
+
+    res.json({ success: true, message: `Successfully registered! Assigned Admin: ${adminInfo.name} (${assignedGid})` });
+  } catch (err) {
+    if (err.message.includes('UNIQUE constraint failed')) {
+      return res.status(409).json({ success: false, message: "This USN is already registered." });
+    }
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+// --- AR ADMIN ROUTES ---
+app.post('/api/ar/login', (req, res) => {
+  const { gid } = req.body;
+  const adminInfo = ADMIN_LIST.find(a => a.gid === gid);
+  
+  if (adminInfo) {
+    const token = jwt.sign({ gid: adminInfo.gid, name: adminInfo.name }, JWT_SECRET, { expiresIn: '12h' });
+    logAction('AR Login', `AR Admin ${adminInfo.name} (${gid}) logged in`);
+    res.json({ success: true, token, name: adminInfo.name });
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid GID' });
+  }
+});
+
+const authenticateARToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (token == null) return res.status(401).json({ success: false, message: 'No token provided' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err || !user.gid) return res.status(403).json({ success: false, message: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+};
+
+app.get('/api/ar/registrations', authenticateARToken, (req, res) => {
+  try {
+    const rows = db.prepare('SELECT * FROM registrations WHERE admin_gid = ? ORDER BY id DESC').all(req.user.gid);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+app.get('/api/ar/export', (req, res) => {
+  const token = req.query.token;
+  if (!token) return res.status(401).send('No token provided');
+  
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err || !user.gid) return res.status(403).send('Invalid token');
+    
+    try {
+      const rows = db.prepare('SELECT usn, name, mobile, email, department, registered_at FROM registrations WHERE admin_gid = ? ORDER BY id DESC').all(user.gid);
+      let csv = 'USN,Name,Mobile,Email,Department,Registered At\n';
+      rows.forEach(row => {
+        const safeName = row.name.replace(/"/g, '""');
+        csv += `"${row.usn}","${safeName}","${row.mobile}","${row.email}","${row.department}","${row.registered_at}"\n`;
+      });
+      
+      res.header('Content-Type', 'text/csv');
+      res.attachment(`registrations_${user.gid}.csv`);
+      return res.send(csv);
+    } catch (dbErr) {
+      res.status(500).send('Export failed');
+    }
+  });
+});
+
+app.post('/api/ar/mail', authenticateARToken, async (req, res) => {
+  const { subject, body } = req.body;
+  if (!subject || !body) return res.status(400).json({ success: false, message: 'Subject and body are required' });
+
+  try {
+    const rows = db.prepare('SELECT email FROM registrations WHERE admin_gid = ?').all(req.user.gid);
+    const emails = rows.map(r => r.email).filter(e => e);
+    
+    if (emails.length === 0) return res.status(400).json({ success: false, message: 'No registered members with emails found' });
+
+    // Try to get SMTP config from env, or mock it
+    const smtpHost = process.env.SMTP_HOST || 'smtp.ethereal.email';
+    const smtpPort = process.env.SMTP_PORT || 587;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    if (!smtpUser || !smtpPass) {
+      // Simulate if not configured
+      console.log(`[Mock Mail] Sent to ${emails.length} users. Subject: ${subject}`);
+      return res.json({ success: true, message: `(Mock Mode) Sent mock email to ${emails.length} users. Setup SMTP in .env for real emails.` });
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      auth: { user: smtpUser, pass: smtpPass }
+    });
+
+    // Send emails in bcc or individually. For simplicity, send via bcc
+    await transporter.sendMail({
+      from: '"Fun Night with Gemini" <no-reply@funnight.com>',
+      bcc: emails.join(', '),
+      subject: subject,
+      text: body
+    });
+
+    logAction('AR Email Sent', `Admin ${req.user.gid} sent email to ${emails.length} users`);
+    res.json({ success: true, message: `Successfully sent email to ${emails.length} users.` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Failed to send emails.' });
+  }
 });
