@@ -6,6 +6,8 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const xss = require('xss');
 
 dotenv.config();
 
@@ -81,11 +83,12 @@ const initDB = async () => {
     const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM admins');
     if (parseInt(countRows[0].count) === 0) {
       const insertQuery = 'INSERT INTO admins (gid, name, password, max_count) VALUES ($1, $2, $3, $4)';
-      await pool.query(insertQuery, ['3082', 'Ganesh', 'Admin1', 30]);
-      await pool.query(insertQuery, ['0000', 'Deekshitha R', 'Admin 2', 30]);
-      await pool.query(insertQuery, ['2633', 'Aadya', 'Admin3', 30]);
-      await pool.query(insertQuery, ['2579', 'Amrutha gowri', 'Admin3', 30]);
-      await pool.query(insertQuery, ['2634', 'Deekshitha G S', 'Admin 4', 30]);
+      const defaultHash = await bcrypt.hash('admin', 10);
+      await pool.query(insertQuery, ['3082', 'Ganesh', defaultHash, 30]);
+      await pool.query(insertQuery, ['0000', 'Deekshitha R', defaultHash, 30]);
+      await pool.query(insertQuery, ['2633', 'Aadya', defaultHash, 30]);
+      await pool.query(insertQuery, ['2579', 'Amrutha gowri', defaultHash, 30]);
+      await pool.query(insertQuery, ['2634', 'Deekshitha G S', defaultHash, 30]);
       console.log('Seeded admins to PostgreSQL DB.');
     }
   } catch (e) {
@@ -115,6 +118,12 @@ const submitLimiter = rateLimit({
   message: { success: false, message: 'Too many requests from this IP, please try again after a minute' }
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 attempts per IP
+  message: { success: false, message: 'Too many login attempts from this IP, please try again after 15 minutes' }
+});
+
 // Admin Auth Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -124,6 +133,7 @@ const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ success: false, message: 'Invalid token' });
+    if (!user.admin) return res.status(403).json({ success: false, message: 'Requires Super Admin privileges' });
     req.user = user;
     next();
   });
@@ -133,8 +143,11 @@ const authenticateToken = (req, res, next) => {
 
 // Submit
 app.post('/api/submit', submitLimiter, async (req, res) => {
-  const { usn, name } = req.body;
+  let { usn, name } = req.body;
   if (!usn || !name) return res.status(400).json({ success: false, message: 'USN and Name are required.' });
+  
+  usn = xss(usn);
+  name = xss(name);
 
   const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
   if (!usnRegex.test(usn.toUpperCase())) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
@@ -200,7 +213,7 @@ app.get('/api/export', async (req, res) => {
 
 // --- ADMIN ROUTES ---
 
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', loginLimiter, (req, res) => {
   const { password } = req.body;
   if (password === ADMIN_PASSWORD) {
     const token = jwt.sign({ admin: true }, JWT_SECRET, { expiresIn: '12h' });
@@ -280,8 +293,13 @@ app.get('/api/admin/logs', authenticateToken, async (req, res) => {
 
 // --- REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, async (req, res) => {
-  const { usn, name, mobile, email, adminChoice, languageChoice } = req.body;
+  let { usn, name, mobile, email, adminChoice, languageChoice } = req.body;
   if (!usn || !name || !mobile || !email) return res.status(400).json({ success: false, message: 'All fields are required.' });
+  
+  usn = xss(usn);
+  name = xss(name);
+  mobile = xss(mobile);
+  email = xss(email);
 
   if (!email.toLowerCase().endsWith('@ncetmail.com')) {
     return res.status(400).json({ success: false, message: 'Only college emails (@ncetmail.com) are allowed.' });
@@ -304,11 +322,16 @@ app.post('/api/register', submitLimiter, async (req, res) => {
     let assignedGid = null;
     
     if (adminChoice && adminChoice !== "") {
-      const { rows: adminList } = await pool.query('SELECT * FROM admins WHERE gid = $1 AND is_active = TRUE', [adminChoice]);
+      const { rows: adminList } = await pool.query(`
+        SELECT a.*, COUNT(r.id) as current_count 
+        FROM admins a 
+        LEFT JOIN registrations r ON a.gid = r.admin_gid 
+        WHERE a.gid = $1 AND a.is_active = TRUE 
+        GROUP BY a.id
+      `, [adminChoice]);
       let minCount = 31;
       for (const admin of adminList) {
-        const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = $1', [admin.gid]);
-        const count = parseInt(countRows[0].count);
+        const count = parseInt(admin.current_count);
         if (count < admin.max_count && count < minCount) {
           minCount = count;
           assignedGid = admin.gid;
@@ -321,11 +344,17 @@ app.post('/api/register', submitLimiter, async (req, res) => {
         return res.status(400).json({ success: false, message: `No GSA found.` });
       }
     } else if (languageChoice && languageChoice !== "") {
-      const { rows: adminList } = await pool.query('SELECT * FROM admins WHERE language = $1 AND is_active = TRUE ORDER BY id ASC', [languageChoice]);
+      const { rows: adminList } = await pool.query(`
+        SELECT a.*, COUNT(r.id) as current_count 
+        FROM admins a 
+        LEFT JOIN registrations r ON a.gid = r.admin_gid 
+        WHERE a.language = $1 AND a.is_active = TRUE 
+        GROUP BY a.id
+        ORDER BY a.id ASC
+      `, [languageChoice]);
       let minCount = 31;
       for (const admin of adminList) {
-        const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = $1', [admin.gid]);
-        const count = parseInt(countRows[0].count);
+        const count = parseInt(admin.current_count);
         if (count < admin.max_count && count < minCount) {
           minCount = count;
           assignedGid = admin.gid;
@@ -369,13 +398,13 @@ const authenticateARToken = (req, res, next) => {
     next();
   });
 };
-app.post('/api/ar/login', async (req, res) => {
+app.post('/api/ar/login', loginLimiter, async (req, res) => {
   const { gid, password } = req.body;
   try {
-    const { rows } = await pool.query('SELECT * FROM admins WHERE gid = $1 AND password = $2', [gid, password]);
+    const { rows } = await pool.query('SELECT * FROM admins WHERE gid = $1', [gid]);
     const adminInfo = rows[0];
     
-    if (adminInfo) {
+    if (adminInfo && await bcrypt.compare(password, adminInfo.password)) {
       const token = jwt.sign({ gid: adminInfo.gid, name: adminInfo.name }, JWT_SECRET, { expiresIn: '12h' });
       logAction('AR Login', `AR Admin ${adminInfo.name} (${gid}) logged in`);
       res.json({ success: true, token, name: adminInfo.name });
@@ -489,8 +518,9 @@ app.post('/api/super/admins', authenticateToken, async (req, res) => {
   const { gid, name, password, max_count, language, is_active } = req.body;
   const active = is_active !== undefined ? is_active : true;
   try {
+    const hashedPassword = await bcrypt.hash(password, 10);
     await pool.query('INSERT INTO admins (gid, name, password, max_count, language, is_active) VALUES ($1, $2, $3, $4, $5, $6)', 
-      [gid, name, password, max_count || 30, language || 'English', active]);
+      [gid, name, hashedPassword, max_count || 30, language || 'English', active]);
     res.json({ success: true, message: 'Admin added successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'GID already exists or invalid data' }); }
 });
@@ -499,8 +529,12 @@ app.put('/api/super/admins/:id', authenticateToken, async (req, res) => {
   const { gid, name, password, max_count, language, is_active } = req.body;
   const active = is_active !== undefined ? is_active : true;
   try {
+    let finalPassword = password;
+    if (password && !password.startsWith('$2b$')) {
+      finalPassword = await bcrypt.hash(password, 10);
+    }
     await pool.query('UPDATE admins SET gid=$1, name=$2, password=$3, max_count=$4, language=$5, is_active=$6 WHERE id=$7', 
-      [gid, name, password, max_count, language || 'English', active, req.params.id]);
+      [gid, name, finalPassword, max_count, language || 'English', active, req.params.id]);
     res.json({ success: true, message: 'Admin updated successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
 });
