@@ -29,6 +29,10 @@ const cancelEditBtn = document.getElementById('cancelEditBtn');
 const formMsg = document.getElementById('formMsg');
 const tableBody = document.getElementById('tableBody');
 
+const superConfigForm = document.getElementById('superConfigForm');
+const allowedBranchesInput = document.getElementById('allowedBranches');
+const superConfigMsg = document.getElementById('superConfigMsg');
+
 const checkAuth = () => {
   const token = localStorage.getItem('superToken');
   if (token) {
@@ -48,6 +52,7 @@ const showDashboard = () => {
   loginContainer.style.display = 'none';
   dashboardContainer.style.display = 'block';
   logoutBtn.style.display = 'block';
+  fetchConfig();
   fetchAdmins();
 };
 
@@ -80,6 +85,36 @@ logoutBtn.addEventListener('click', () => {
 });
 
 let adminsList = [];
+
+const fetchConfig = async () => {
+  const token = localStorage.getItem('superToken');
+  try {
+    const res = await fetch('/api/admin/config', { headers: { 'Authorization': `Bearer ${token}` }});
+    const data = await res.json();
+    if (data.success && allowedBranchesInput) {
+      allowedBranchesInput.value = data.allowed_branches || 'CS,CI,CD,IS,EC,EE,ME,CV';
+    }
+  } catch(e) {}
+};
+
+if (superConfigForm) {
+  superConfigForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('superToken');
+    const branches = allowedBranchesInput.value;
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ allowed_branches: branches })
+      });
+      if (res.ok) {
+        superConfigMsg.style.display = 'block';
+        setTimeout(() => superConfigMsg.style.display = 'none', 3000);
+      }
+    } catch(e) {}
+  });
+}
 
 const fetchAdmins = async () => {
   const token = localStorage.getItem('superToken');

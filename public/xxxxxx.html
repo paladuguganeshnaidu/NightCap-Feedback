@@ -52,6 +52,17 @@
     <!-- Dashboard -->
     <div class="dashboard-container" id="dashboardContainer">
       <h2 style="margin-bottom: 2rem; color: var(--gemini-blue);">Manage GSA Admins</h2>
+
+      <!-- Config Section -->
+      <div class="admin-section glass">
+        <h2>Global Registration Settings</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.8;">Set the allowed branches (comma separated like CS,CI,CD). Leave blank to allow all default.</p>
+        <form id="superConfigForm" class="config-form">
+          <input type="text" id="allowedBranches" placeholder="CS,CI,CD,IS,EC,EE,ME,CV" style="flex: 1; min-width: 250px;">
+          <button type="submit" class="primary-btn" style="width: auto;">Save Settings</button>
+        </form>
+        <div id="superConfigMsg" style="margin-top: 1rem; color: var(--gemini-green); font-weight: bold; display: none;">Settings Saved Successfully!</div>
+      </div>
       
       <!-- Add/Edit Admin Section -->
       <div class="admin-section glass">

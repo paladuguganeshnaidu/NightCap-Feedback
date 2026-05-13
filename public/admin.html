@@ -50,13 +50,10 @@
       <!-- Config Section -->
       <div class="admin-section glass">
         <h2>System Configuration</h2>
-        <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.8;">Set the redirect URL after successful submission and allowed branches (comma separated like CS,CI,CD). Leave blank to allow all default.</p>
+        <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.8;">Set the redirect URL after successful submission. Leave blank to show the default success message.</p>
         <form id="configForm" class="config-form">
-          <div style="display: flex; gap: 10px; width: 100%; flex-wrap: wrap;">
-            <input type="url" id="redirectUrl" placeholder="https://example.com/feedback-form" style="flex: 1; min-width: 250px;">
-            <input type="text" id="allowedBranches" placeholder="CS,CI,CD,IS,EC,EE,ME,CV" style="flex: 1; min-width: 250px;">
-          </div>
-          <button type="submit" class="primary-btn" style="width: 100%; margin-top: 10px;">Save Changes</button>
+          <input type="url" id="redirectUrl" placeholder="https://example.com/feedback-form">
+          <button type="submit" class="primary-btn">Save Changes</button>
         </form>
         <div id="configMsg" style="margin-top: 1rem; color: var(--gemini-green); font-weight: bold; display: none;">Configuration Saved Successfully!</div>
       </div>
