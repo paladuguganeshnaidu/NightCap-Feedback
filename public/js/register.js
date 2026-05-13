@@ -33,27 +33,42 @@ const assignedAdminText = document.getElementById('assignedAdminText');
 const adminChoiceSelect = document.getElementById('adminChoice');
 
 const loadAdmins = async () => {
-  const adminChoiceSelect = document.getElementById('adminChoice');
-  if (!adminChoiceSelect) return;
+  const languageChoiceSelect = document.getElementById('languageChoice');
+  if (!languageChoiceSelect) return;
   try {
     const res = await fetch('/api/admins');
     const data = await res.json();
     if (data.success) {
       window.adminData = data.data;
-      data.data.forEach(admin => {
+      
+      // Extract unique languages
+      const languages = [...new Set(data.data.map(a => a.language || 'English'))];
+      languages.forEach(lang => {
         const opt = document.createElement('option');
-        opt.value = admin.gid;
-        opt.textContent = admin.name;
+        opt.value = lang;
+        opt.textContent = lang;
         opt.style.color = 'black';
-        adminChoiceSelect.appendChild(opt);
+        languageChoiceSelect.appendChild(opt);
       });
 
-      // Check URL for pre-selected admin
+      // Check URL for pre-selected admin (bypasses language choice)
       const urlParams = new URLSearchParams(window.location.search);
       const preselect = urlParams.get('gsa');
       if (preselect) {
-        adminChoiceSelect.value = preselect;
-        adminChoiceSelect.closest('.input-group').style.display = 'none'; // hide it so users can't change it
+        // Create a hidden input for adminChoice
+        const hiddenAdmin = document.createElement('input');
+        hiddenAdmin.type = 'hidden';
+        hiddenAdmin.id = 'adminChoice';
+        hiddenAdmin.value = preselect;
+        document.getElementById('registrationForm').appendChild(hiddenAdmin);
+        
+        languageChoiceSelect.closest('.input-group').style.display = 'none'; // hide language
+        
+        const gsaNameDisplay = document.getElementById('gsaNameDisplay');
+        if (gsaNameDisplay) {
+          const adminObj = data.data.find(a => a.gid === preselect);
+          if (adminObj) gsaNameDisplay.textContent = `Assigned to GSA: ${adminObj.name}`;
+        }
       }
     }
   } catch(e) { console.error('Failed to load admins'); }
@@ -225,6 +240,8 @@ form.addEventListener('submit', async (e) => {
   const mobile = mobileInput.value;
   const email = emailInput.value;
   const adminChoice = document.getElementById('adminChoice') ? document.getElementById('adminChoice').value : '';
+  const languageChoiceSelect = document.getElementById('languageChoice');
+  const languageChoice = languageChoiceSelect && languageChoiceSelect.closest('.input-group').style.display !== 'none' ? languageChoiceSelect.value : '';
 
   let isValid = true;
   if (!usnRegex.test(usn)) { usnError.classList.add('show'); isValid = false; }
@@ -232,6 +249,12 @@ form.addEventListener('submit', async (e) => {
   if (!mobileRegex.test(mobile)) { mobileError.classList.add('show'); isValid = false; }
   if (!emailRegex.test(email)) { 
     globalError.textContent = 'Only college emails (@ncetmail.com) are allowed.';
+    globalError.classList.add('show');
+    isValid = false;
+  }
+  
+  if (!adminChoice && !languageChoice) {
+    globalError.textContent = 'Please select a language.';
     globalError.classList.add('show');
     isValid = false;
   }
@@ -246,7 +269,7 @@ form.addEventListener('submit', async (e) => {
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usn, name, mobile, email, adminChoice })
+      body: JSON.stringify({ usn, name, mobile, email, adminChoice, languageChoice })
     });
 
     const data = await res.json();

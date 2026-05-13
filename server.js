@@ -258,7 +258,7 @@ app.get('/api/admin/logs', authenticateToken, async (req, res) => {
 
 // --- REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, async (req, res) => {
-  const { usn, name, mobile, email, adminChoice } = req.body;
+  const { usn, name, mobile, email, adminChoice, languageChoice } = req.body;
   if (!usn || !name || !mobile || !email) return res.status(400).json({ success: false, message: 'All fields are required.' });
 
   if (!email.toLowerCase().endsWith('@ncetmail.com')) {
@@ -298,8 +298,8 @@ app.post('/api/register', submitLimiter, async (req, res) => {
       } else if (!assignedGid && adminList.length === 0) {
         return res.status(400).json({ success: false, message: `No GSA found.` });
       }
-    } else {
-      const { rows: adminList } = await pool.query('SELECT * FROM admins ORDER BY id ASC');
+    } else if (languageChoice && languageChoice !== "") {
+      const { rows: adminList } = await pool.query('SELECT * FROM admins WHERE language = $1 ORDER BY id ASC', [languageChoice]);
       let minCount = 31;
       for (const admin of adminList) {
         const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = $1', [admin.gid]);
@@ -309,7 +309,13 @@ app.post('/api/register', submitLimiter, async (req, res) => {
           assignedGid = admin.gid;
         }
       }
-      if (!assignedGid) return res.status(400).json({ success: false, message: 'All GSAs have reached their maximum limit.' });
+      if (!assignedGid && adminList.length > 0) {
+        return res.status(400).json({ success: false, message: `All GSAs speaking ${languageChoice} have reached their limit.` });
+      } else if (!assignedGid && adminList.length === 0) {
+        return res.status(400).json({ success: false, message: `No GSA found speaking ${languageChoice}.` });
+      }
+    } else {
+      return res.status(400).json({ success: false, message: `Please select a language.` });
     }
 
     if (!assignedGid) return res.status(400).json({ success: false, message: 'Registration is full. No available slots.' });
