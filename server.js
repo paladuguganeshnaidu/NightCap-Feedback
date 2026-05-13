@@ -280,7 +280,7 @@ app.listen(PORT, () => {
 
 // --- NEW REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, (req, res) => {
-  const { usn, name, mobile, email, languageChoice } = req.body;
+  const { usn, name, mobile, email, adminChoice } = req.body;
   if (!usn || !name || !mobile || !email) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
@@ -303,9 +303,9 @@ app.post('/api/register', submitLimiter, (req, res) => {
 
     let assignedGid = null;
     
-    // If user explicitly chose a language
-    if (languageChoice && languageChoice !== "") {
-      const adminList = db.prepare('SELECT * FROM admins WHERE language = ? ORDER BY id ASC').all(languageChoice);
+    // If user explicitly chose an admin
+    if (adminChoice && adminChoice !== "") {
+      const adminList = db.prepare('SELECT * FROM admins WHERE gid = ?').all(adminChoice);
       let minCount = 31;
       for (const admin of adminList) {
         const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
@@ -316,12 +316,24 @@ app.post('/api/register', submitLimiter, (req, res) => {
       }
       
       if (!assignedGid && adminList.length > 0) {
-        return res.status(400).json({ success: false, message: `All GSAs for language ${languageChoice} have reached the max limit. Please choose another language.` });
+        return res.status(400).json({ success: false, message: `The selected GSA has reached the max limit. Please choose another one.` });
       } else if (!assignedGid && adminList.length === 0) {
-        return res.status(400).json({ success: false, message: `No GSAs found for language ${languageChoice}.` });
+        return res.status(400).json({ success: false, message: `No GSA found.` });
       }
     } else {
-      return res.status(400).json({ success: false, message: 'Please select a language.' });
+      // Auto assign if no adminChoice provided
+      const adminList = db.prepare('SELECT * FROM admins ORDER BY id ASC').all();
+      let minCount = 31;
+      for (const admin of adminList) {
+        const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
+        if (count < admin.max_count && count < minCount) {
+          minCount = count;
+          assignedGid = admin.gid;
+        }
+      }
+      if (!assignedGid) {
+        return res.status(400).json({ success: false, message: 'All GSAs have reached their maximum limit.' });
+      }
     }
 
     if (!assignedGid) {
@@ -372,6 +384,21 @@ const authenticateARToken = (req, res, next) => {
 app.get('/api/ar/registrations', authenticateARToken, (req, res) => {
   try {
     const rows = db.prepare('SELECT * FROM registrations WHERE admin_gid = ? ORDER BY id DESC').all(req.user.gid);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+app.get('/api/ar/feedback', authenticateARToken, (req, res) => {
+  try {
+    const rows = db.prepare(`
+      SELECT s.id, s.usn, s.name, s.submitted_at 
+      FROM submissions s
+      JOIN registrations r ON s.usn = r.usn
+      WHERE r.admin_gid = ?
+      ORDER BY s.submitted_at DESC
+    `).all(req.user.gid);
     res.json({ success: true, data: rows });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Database error.' });

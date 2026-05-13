@@ -62,7 +62,30 @@
 
     <!-- Dashboard -->
     <div class="dashboard-container" id="dashboardContainer">
-      <h2 style="margin-bottom: 2rem; color: var(--gemini-blue);">Welcome, <span id="welcomeName"></span>!</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin-bottom: 0; color: var(--gemini-blue);">Welcome, <span id="welcomeName"></span>!</h2>
+        <div style="font-size: 1.1rem; font-weight: 500; background: rgba(0,0,0,0.2); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+          Your GID: <span id="displayGid" style="color: var(--gemini-purple); font-weight: bold;"></span>
+        </div>
+      </div>
+
+      <!-- Share Links Section -->
+      <div class="admin-section glass">
+        <h2 style="margin-bottom: 0.5rem;">Your Special Links</h2>
+        <p style="opacity: 0.8; margin-bottom: 1rem;">Share these links with your students.</p>
+        
+        <label style="font-weight: bold; margin-bottom: 0.2rem; display: block;">Registration Form Link:</label>
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+          <input type="text" id="specialRegLink" readonly style="flex: 1; min-width: 250px; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color); font-family: monospace; font-size: 0.9rem;">
+          <button class="btn-secondary" onclick="copyLink('specialRegLink', this)" style="white-space: nowrap;">📋 Copy Link</button>
+        </div>
+
+        <label style="font-weight: bold; margin-bottom: 0.2rem; display: block;">Feedback Form Link:</label>
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap;">
+          <input type="text" id="specialFbLink" readonly style="flex: 1; min-width: 250px; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color); font-family: monospace; font-size: 0.9rem;">
+          <button class="btn-secondary" onclick="copyLink('specialFbLink', this)" style="white-space: nowrap;">📋 Copy Link</button>
+        </div>
+      </div>
       
       <!-- Mail Section -->
       <div class="admin-section glass">
@@ -105,6 +128,31 @@
             </thead>
             <tbody id="tableBody">
               <tr><td colspan="8" style="text-align: center;">Loading data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Feedback Section -->
+      <div class="admin-section glass">
+        <div class="actions">
+          <div class="actions-left">
+            <h2>Feedback Received (<span id="fbCount">0</span>)</h2>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="fbTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>USN</th>
+                <th>Name</th>
+                <th>Submitted At</th>
+              </tr>
+            </thead>
+            <tbody id="fbTableBody">
+              <tr><td colspan="4" style="text-align: center;">Loading feedback...</td></tr>
             </tbody>
           </table>
         </div>

@@ -57,7 +57,25 @@ const showDashboard = (name) => {
   logoutBtn.style.display = 'block';
   headerAdminName.textContent = `- ${name}`;
   welcomeName.textContent = name;
+  
+  const gid = localStorage.getItem('arGid');
+  if (gid) {
+    document.getElementById('displayGid').textContent = gid;
+    document.getElementById('specialRegLink').value = `${window.location.origin}/register.html?gsa=${gid}`;
+    document.getElementById('specialFbLink').value = `${window.location.origin}/index.html?gsa=${gid}`;
+  }
+
   fetchData();
+  fetchFeedback();
+};
+
+window.copyLink = (inputId, btn) => {
+  const linkInput = document.getElementById(inputId);
+  linkInput.select();
+  document.execCommand('copy');
+  const originalText = btn.textContent;
+  btn.textContent = '✅ Copied!';
+  setTimeout(() => btn.textContent = originalText, 2000);
 };
 
 // Login
@@ -78,6 +96,7 @@ loginForm.addEventListener('submit', async (e) => {
     if (res.ok && data.success) {
       localStorage.setItem('arToken', data.token);
       localStorage.setItem('arName', data.name);
+      localStorage.setItem('arGid', gidInput.value.trim());
       showDashboard(data.name);
     } else {
       loginError.textContent = data.message || 'Login failed';
@@ -96,6 +115,7 @@ loginForm.addEventListener('submit', async (e) => {
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem('arToken');
   localStorage.removeItem('arName');
+  localStorage.removeItem('arGid');
   showLogin();
 });
 
@@ -122,6 +142,36 @@ const fetchData = async () => {
     }
   } catch (err) {
     tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data</td></tr>';
+  }
+};
+
+const fetchFeedback = async () => {
+  const fbTableBody = document.getElementById('fbTableBody');
+  const fbCount = document.getElementById('fbCount');
+  fbTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading feedback...</td></tr>';
+  try {
+    const token = localStorage.getItem('arToken');
+    const res = await fetch('/api/ar/feedback', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.success) {
+      fbCount.textContent = data.data.length;
+      if (data.data.length === 0) {
+        fbTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No feedback found for your registrations.</td></tr>';
+      } else {
+        fbTableBody.innerHTML = data.data.map(r => `
+          <tr>
+            <td>#${r.id}</td>
+            <td style="font-weight: bold; color: var(--gemini-purple);">${r.usn}</td>
+            <td>${r.name}</td>
+            <td>${new Date(r.submitted_at + 'Z').toLocaleString()}</td>
+          </tr>
+        `).join('');
+      }
+    }
+  } catch (err) {
+    fbTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Failed to load feedback</td></tr>';
   }
 };
 
@@ -187,7 +237,10 @@ window.removeRegistration = async (id) => {
   }
 };
 
-refreshBtn.addEventListener('click', fetchData);
+refreshBtn.addEventListener('click', () => {
+  fetchData();
+  fetchFeedback();
+});
 
 // Export
 exportBtn.addEventListener('click', () => {

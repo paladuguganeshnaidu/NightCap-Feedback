@@ -33,34 +33,28 @@ const assignedAdminText = document.getElementById('assignedAdminText');
 const adminChoiceSelect = document.getElementById('adminChoice');
 
 const loadAdmins = async () => {
-  const languageChoiceSelect = document.getElementById('languageChoice');
-  if (!languageChoiceSelect) return;
+  const adminChoiceSelect = document.getElementById('adminChoice');
+  if (!adminChoiceSelect) return;
   try {
     const res = await fetch('/api/admins');
     const data = await res.json();
     if (data.success) {
       window.adminData = data.data;
-      const languages = [...new Set(data.data.map(a => a.language || 'English'))].sort((a, b) => a.localeCompare(b));
-      languages.forEach(lang => {
+      data.data.forEach(admin => {
         const opt = document.createElement('option');
-        opt.value = lang;
-        opt.textContent = lang;
+        opt.value = admin.gid;
+        opt.textContent = admin.name;
         opt.style.color = 'black';
-        languageChoiceSelect.appendChild(opt);
+        adminChoiceSelect.appendChild(opt);
       });
-      
-      languageChoiceSelect.addEventListener('change', (e) => {
-        const lang = e.target.value;
-        const displayEl = document.getElementById('gsaNameDisplay');
-        if (lang) {
-          const adminsForLang = window.adminData.filter(a => (a.language || 'English') === lang);
-          if (adminsForLang.length > 0) {
-            displayEl.textContent = "Assigned GSA: " + adminsForLang.map(a => a.name).join(' or ');
-          }
-        } else {
-          displayEl.textContent = "";
-        }
-      });
+
+      // Check URL for pre-selected admin
+      const urlParams = new URLSearchParams(window.location.search);
+      const preselect = urlParams.get('gsa');
+      if (preselect) {
+        adminChoiceSelect.value = preselect;
+        adminChoiceSelect.closest('.input-group').style.display = 'none'; // hide it so users can't change it
+      }
     }
   } catch(e) { console.error('Failed to load admins'); }
 };
@@ -229,7 +223,7 @@ form.addEventListener('submit', async (e) => {
   const name = nameInput.value;
   const mobile = mobileInput.value;
   const email = emailInput.value;
-  const languageChoice = document.getElementById('languageChoice') ? document.getElementById('languageChoice').value : '';
+  const adminChoice = document.getElementById('adminChoice') ? document.getElementById('adminChoice').value : '';
 
   let isValid = true;
   if (!usnRegex.test(usn)) { usnError.classList.add('show'); isValid = false; }
@@ -246,7 +240,7 @@ form.addEventListener('submit', async (e) => {
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usn, name, mobile, email, languageChoice })
+      body: JSON.stringify({ usn, name, mobile, email, adminChoice })
     });
 
     const data = await res.json();
