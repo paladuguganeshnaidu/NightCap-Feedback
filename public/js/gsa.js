@@ -56,17 +56,19 @@ const showDashboard = (name) => {
   dashboardContainer.style.display = 'block';
   logoutBtn.style.display = 'block';
   headerAdminName.textContent = `- ${name}`;
-  welcomeName.textContent = name;
+  welcomeName.textContent = name || localStorage.getItem('arName');
   
-  const gid = localStorage.getItem('arGid');
+  const gid = localStorage.getItem('arGid') || '';
+  document.getElementById('displayGid').textContent = gid;
+  
   if (gid) {
-    document.getElementById('displayGid').textContent = gid;
     document.getElementById('specialRegLink').value = `${window.location.origin}/register.html?gsa=${gid}`;
     document.getElementById('specialFbLink').value = `${window.location.origin}/index.html?gsa=${gid}`;
   }
 
   fetchData();
   fetchFeedback();
+  fetchConfig();
 };
 
 window.copyLink = (inputId, btn) => {
@@ -141,9 +143,44 @@ const fetchData = async () => {
       regCount.textContent = currentData.length;
     }
   } catch (err) {
+  } catch (err) {
     tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data</td></tr>';
   }
 };
+
+const fetchConfig = async () => {
+  try {
+    const token = localStorage.getItem('arToken');
+    const res = await fetch('/api/ar/config', { headers: { 'Authorization': `Bearer ${token}` }});
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('customRedirectUrl').value = data.redirect_url || '';
+    }
+  } catch(e) {}
+};
+
+const redirectForm = document.getElementById('redirectForm');
+const customRedirectUrl = document.getElementById('customRedirectUrl');
+const redirectMsg = document.getElementById('redirectMsg');
+
+if (redirectForm) {
+  redirectForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('arToken');
+    try {
+      const res = await fetch('/api/ar/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ redirect_url: customRedirectUrl.value })
+      });
+      const data = await res.json();
+      redirectMsg.style.display = 'block';
+      redirectMsg.style.color = res.ok ? 'var(--gemini-green)' : 'var(--gemini-red)';
+      redirectMsg.textContent = data.message || 'Action failed';
+      setTimeout(() => redirectMsg.style.display = 'none', 3000);
+    } catch(e) {}
+  });
+}
 
 const fetchFeedback = async () => {
   const fbTableBody = document.getElementById('fbTableBody');

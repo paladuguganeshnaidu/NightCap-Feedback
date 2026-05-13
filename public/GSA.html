@@ -86,6 +86,17 @@
           <button class="btn-secondary" onclick="copyLink('specialFbLink', this)" style="white-space: nowrap;">📋 Copy Link</button>
         </div>
       </div>
+
+      <!-- Feedback Settings -->
+      <div class="admin-section glass">
+        <h2>Feedback Redirect Settings</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.8;">Set the Google Form link (or any URL) that your students should be redirected to after they submit feedback on your link.</p>
+        <form id="redirectForm" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <input type="url" id="customRedirectUrl" placeholder="https://forms.gle/..." required style="flex: 1; min-width: 250px;">
+          <button type="submit" class="primary-btn" style="white-space: nowrap; width: auto;">Save Redirect URL</button>
+        </form>
+        <div id="redirectMsg" style="margin-top: 0.5rem; font-weight: bold; display: none;"></div>
+      </div>
       
       <!-- Mail Section -->
       <div class="admin-section glass">

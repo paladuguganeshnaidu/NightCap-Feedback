@@ -54,22 +54,27 @@ const initDB = async () => {
         name TEXT NOT NULL,
         password TEXT NOT NULL,
         max_count INTEGER DEFAULT 30,
-        language TEXT DEFAULT 'English'
+        language TEXT DEFAULT 'English',
+        redirect_url TEXT
       );
       
       CREATE TABLE IF NOT EXISTS config (
-        key TEXT PRIMARY KEY,
-        value TEXT
+        id SERIAL PRIMARY KEY,
+        key TEXT UNIQUE NOT NULL,
+        value TEXT NOT NULL
       );
-
+      
       CREATE TABLE IF NOT EXISTS logs (
         id SERIAL PRIMARY KEY,
         action TEXT NOT NULL,
-        details TEXT,
+        details TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
+    // Add columns dynamically in case the tables already exist
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS admin_gid TEXT;`);
+    await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS redirect_url TEXT;`);
     // Seed admins if empty
     const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM admins');
     if (parseInt(countRows[0].count) === 0) {
@@ -135,10 +140,25 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
   if (!nameRegex.test(name)) return res.status(400).json({ success: false, message: 'Invalid Name format.' });
 
   try {
-    await pool.query('INSERT INTO submissions (usn, name) VALUES ($1, $2)', [usn.toUpperCase(), name.trim()]);
+    // 1. Check if USN is registered
+    const { rows: regRows } = await pool.query('SELECT admin_gid FROM registrations WHERE usn = $1', [usn.toUpperCase()]);
+    if (regRows.length === 0) {
+      return res.status(403).json({ success: false, message: 'USN not found. You must be registered to submit feedback.' });
+    }
+    const adminGid = regRows[0].admin_gid;
+
+    // 2. Insert into submissions
+    await pool.query('INSERT INTO submissions (usn, name, admin_gid) VALUES ($1, $2, $3)', [usn.toUpperCase(), name.trim(), adminGid]);
     
-    const { rows: configRows } = await pool.query("SELECT value FROM config WHERE key = 'redirect_url'");
-    const redirectUrl = configRows.length > 0 ? configRows[0].value : null;
+    // 3. Get custom redirect URL for this specific admin
+    const { rows: adminRows } = await pool.query('SELECT redirect_url FROM admins WHERE gid = $1', [adminGid]);
+    let redirectUrl = adminRows.length > 0 ? adminRows[0].redirect_url : null;
+
+    // 4. Fallback to global redirect if admin hasn't set one
+    if (!redirectUrl || redirectUrl.trim() === '') {
+      const { rows: configRows } = await pool.query("SELECT value FROM config WHERE key = 'redirect_url'");
+      redirectUrl = configRows.length > 0 ? configRows[0].value : null;
+    }
 
     res.json({ success: true, redirect_url: redirectUrl, message: 'Thank you for your submission!' });
   } catch (err) {
@@ -336,6 +356,17 @@ app.post('/api/register', submitLimiter, async (req, res) => {
 });
 
 // --- AR ADMIN ROUTES ---
+const authenticateARToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token == null) return res.status(401).json({ success: false, message: 'No token provided' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ success: false, message: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+};
 app.post('/api/ar/login', async (req, res) => {
   const { gid, password } = req.body;
   try {
@@ -354,17 +385,24 @@ app.post('/api/ar/login', async (req, res) => {
   }
 });
 
-const authenticateARToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (token == null) return res.status(401).json({ success: false, message: 'No token provided' });
+app.get('/api/ar/config', authenticateARToken, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT redirect_url FROM admins WHERE gid = $1', [req.user.gid]);
+    res.json({ success: true, redirect_url: rows[0]?.redirect_url });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err || !user.gid) return res.status(403).json({ success: false, message: 'Invalid token' });
-    req.user = user;
-    next();
-  });
-};
+app.put('/api/ar/config', authenticateARToken, async (req, res) => {
+  const { redirect_url } = req.body;
+  try {
+    await pool.query('UPDATE admins SET redirect_url = $1 WHERE gid = $2', [redirect_url, req.user.gid]);
+    res.json({ success: true, message: 'Redirect URL updated successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
 
 app.get('/api/ar/registrations', authenticateARToken, async (req, res) => {
   try {
