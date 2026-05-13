@@ -4,13 +4,114 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fun Night with Gemini - Feedback</title>
-  <link rel="stylesheet" href="/css/style.css?v=2">
+  <title>Fun Night with Gemini - Home</title>
+  <link rel="stylesheet" href="/css/style.css?v=5">
+  <style>
+    /* Hero Section */
+    .hero-section {
+      text-align: center;
+      padding: 4rem 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-title {
+      font-size: 3rem;
+      background: linear-gradient(135deg, #4285F4, #9b72cb, #ea4335);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      font-weight: 800;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-color);
+      opacity: 0.8;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* GSA Showcase */
+    .gsa-showcase {
+      max-width: 1200px;
+      margin: 0 auto 4rem;
+      padding: 0 1rem;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 3rem;
+      color: var(--text-color);
+      position: relative;
+    }
+
+    .gsa-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 2rem;
+      justify-items: center;
+    }
+
+    .gsa-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      width: 100%;
+    }
+
+    .gsa-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 12px 24px rgba(66, 133, 244, 0.15);
+      border-color: #4285F4;
+    }
+
+    .gsa-logo {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+    }
+    
+    [data-theme="dark"] .gsa-card {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Feature banners */
+    .banner {
+      width: 100%;
+      border-radius: 24px;
+      overflow: hidden;
+      margin-bottom: 3rem;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  </style>
 </head>
 
 <body>
-  <canvas id="confetti-canvas"></canvas>
-
   <header>
     <a href="/" class="logo-container">
       <svg class="gemini-sparkle" viewBox="0 0 24 24">
@@ -34,63 +135,70 @@
 
   <div class="menu-overlay" id="menuOverlay">
     <div class="menu-links">
-      <a href="/">Feedback Form</a>
+      <a href="/">Home</a>
       <a href="/register.html">Registration</a>
+      <a href="/feedback.html">Feedback Form</a>
       <a href="/GSA.html">GSA Dashboard</a>
     </div>
   </div>
 
   <main>
-    <div class="form-container glass" id="formContainer">
-      <form id="feedbackForm">
-        <div class="input-group">
-          <label for="usn">University Seat Number (USN)</label>
-          <input type="text" id="usn" name="usn" placeholder="USN" required autocomplete="off">
-          <span class="branch-tag" id="branchTag">CS</span>
-          <div class="error-msg" id="usnError">Invalid USN</div>
-        </div>
+    <section class="hero-section">
+      <h1 class="hero-title">Welcome to Fun Night 2026</h1>
+      <p class="hero-subtitle">Brought to you by the Google Student Ambassadors. Join us for an unforgettable evening of technology, innovation, and community.</p>
+      
+      <div class="hero-actions">
+        <a href="/register.html" class="primary-btn" style="text-decoration: none; display: inline-flex;">Register Now</a>
+        <a href="/feedback.html" class="btn-secondary" style="text-decoration: none; display: inline-flex;">Submit Feedback</a>
+      </div>
+    </section>
 
-        <div class="input-group">
-          <label for="name">Full Name</label>
-          <input type="text" id="name" name="name" placeholder="Name" required>
-          <div class="error-msg" id="nameError">Name must contain only letters, spaces, or dots (max 100 chars).</div>
-        </div>
-
-        <div id="globalError" class="error-msg" style="margin-bottom: 1rem; text-align: center;"></div>
-
-        <button type="submit" class="primary-btn" id="submitBtn">
-          <span>Proceed to Feedback</span>
-          <div class="spinner" id="btnSpinner"></div>
-        </button>
-      </form>
-    </div>
-
-    <div class="success-state glass" id="successState">
-      <svg class="gemini-sparkle" viewBox="0 0 24 24" style="width: 64px; height: 64px; margin-bottom: 1rem;">
-        <defs>
-          <linearGradient id="gemini-grad-success" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#4285F4" />
-            <stop offset="100%" stop-color="#9b72cb" />
-          </linearGradient>
-        </defs>
-        <path fill="url(#gemini-grad-success)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
-      </svg>
-      <h2 id="successMessage">Thank You!</h2>
-      <p id="redirectText" style="display: none;">Complete Feedback for Certificate</p>
-      <a id="manualRedirectBtn" href="#" class="btn-secondary" style="display: none; margin-top: 2rem; border-color: var(--gemini-purple); color: var(--gemini-purple); text-decoration: none;">Click here if not redirected automatically</a>
-    </div>
+    <section class="gsa-showcase">
+      <div class="banner">
+        <img src="/images/gsas/Google Gemini Logo on White.png" alt="Google Gemini Student Ambassador">
+      </div>
+      
+      <h2 class="section-title">Meet Our Ambassadors</h2>
+      <div class="gsa-grid">
+        <!-- Gallery of GSA Logos -->
+        <div class="gsa-card"><img src="/images/gsas/01 (1).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/02 (1).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/03 (1).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/04 (1).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/05 (9).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/06 (10).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/07 (1).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/08 (12).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/09 (13).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/10 (14).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/Logo 01 (1).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/Logo 02 (2).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/Logo 03 (3).png" class="gsa-logo"></div>
+        <div class="gsa-card"><img src="/images/gsas/Logo 04.png" class="gsa-logo"></div>
+      </div>
+    </section>
   </main>
 
   <footer>
     <p>Fun Night with Gemini &copy; <span id="year"></span></p>
   </footer>
 
-  <!-- Audio Context for subtle blip -->
   <script>
     document.getElementById('year').textContent = new Date().getFullYear();
+    
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    themeToggle.addEventListener('click', () => {
+      let theme = document.documentElement.getAttribute('data-theme');
+      let newTheme = theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
   </script>
-  <script src="/js/main.js"></script>
   <script src="/js/menu.js"></script>
 </body>
-
 </html>
+

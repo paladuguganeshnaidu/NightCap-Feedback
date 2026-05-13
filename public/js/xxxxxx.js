@@ -149,7 +149,7 @@ const renderTable = () => {
       <td>
         <div style="display:flex; flex-direction:column; gap:0.4rem;">
           <input type="text" readonly value="${window.location.origin}/register.html?gsa=${a.gid}" style="font-size:0.75rem; padding:0.3rem; border-radius:4px; border:1px solid #555; background:rgba(0,0,0,0.3); color:white; cursor:pointer;" onclick="this.select();document.execCommand('copy');alert('Registration Link Copied!')" title="Click to copy Reg Link">
-          <input type="text" readonly value="${window.location.origin}/index.html?gsa=${a.gid}" style="font-size:0.75rem; padding:0.3rem; border-radius:4px; border:1px solid #555; background:rgba(0,0,0,0.3); color:white; cursor:pointer;" onclick="this.select();document.execCommand('copy');alert('Feedback Link Copied!')" title="Click to copy Feedback Link">
+          <input type="text" readonly value="${window.location.origin}/feedback.html?gsa=${a.gid}" style="font-size:0.75rem; padding:0.3rem; border-radius:4px; border:1px solid #555; background:rgba(0,0,0,0.3); color:white; cursor:pointer;" onclick="this.select();document.execCommand('copy');alert('Feedback Link Copied!')" title="Click to copy Feedback Link">
         </div>
       </td>
       <td>

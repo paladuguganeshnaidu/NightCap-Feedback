@@ -63,7 +63,7 @@ const showDashboard = (name) => {
   
   if (gid) {
     document.getElementById('specialRegLink').value = `${window.location.origin}/register.html?gsa=${gid}`;
-    document.getElementById('specialFbLink').value = `${window.location.origin}/index.html?gsa=${gid}`;
+    document.getElementById('specialFbLink').value = `${window.location.origin}/feedback.html?gsa=${gid}`;
   }
 
   fetchData();
