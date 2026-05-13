@@ -23,6 +23,7 @@ const adminGid = document.getElementById('adminGid');
 const adminName = document.getElementById('adminName');
 const adminPassword = document.getElementById('adminPassword');
 const adminMax = document.getElementById('adminMax');
+const adminLanguage = document.getElementById('adminLanguage');
 const saveBtn = document.getElementById('saveBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const formMsg = document.getElementById('formMsg');
@@ -109,6 +110,7 @@ const renderTable = () => {
       <td>${a.name}</td>
       <td>${a.password}</td>
       <td>${a.max_count}</td>
+      <td>${a.language || 'English'}</td>
       <td>
         <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="editAdmin(${a.id})">Edit</button>
         <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-red); color: var(--gemini-red);" onclick="deleteAdmin(${a.id})">Del</button>
@@ -125,6 +127,7 @@ window.editAdmin = (id) => {
   adminName.value = admin.name;
   adminPassword.value = admin.password;
   adminMax.value = admin.max_count;
+  adminLanguage.value = admin.language || 'English';
   formTitle.textContent = 'Edit Admin';
   cancelEditBtn.style.display = 'inline-flex';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -145,7 +148,8 @@ adminForm.addEventListener('submit', async (e) => {
     gid: adminGid.value,
     name: adminName.value,
     password: adminPassword.value,
-    max_count: parseInt(adminMax.value)
+    max_count: parseInt(adminMax.value),
+    language: adminLanguage.value
   };
   
   const isEdit = editId.value !== '';

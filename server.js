@@ -58,6 +58,11 @@ db.exec(`
   );
 `);
 
+try {
+  db.exec("ALTER TABLE admins ADD COLUMN language TEXT DEFAULT 'English'");
+} catch(e) {}
+
+
 // Helper to log actions
 const logAction = (action, details) => {
   try {
@@ -269,7 +274,7 @@ app.listen(PORT, () => {
 
 // --- NEW REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, (req, res) => {
-  const { usn, name, mobile, email, adminChoice } = req.body;
+  const { usn, name, mobile, email, languageChoice } = req.body;
   if (!usn || !name || !mobile || !email) {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
@@ -282,18 +287,23 @@ app.post('/api/register', submitLimiter, (req, res) => {
 
   try {
     let assignedGid = null;
-    let chosenAdmin = null;
     
-    // If user explicitly chose an admin
-    if (adminChoice && adminChoice !== "") {
-      chosenAdmin = db.prepare('SELECT * FROM admins WHERE gid = ?').get(adminChoice);
-      if (chosenAdmin) {
-        const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(chosenAdmin.gid).count;
-        if (count < chosenAdmin.max_count) {
-          assignedGid = chosenAdmin.gid;
-        } else {
-          return res.status(400).json({ success: false, message: `Admin ${chosenAdmin.name} has reached the max limit. Please choose another or select Random.` });
+    // If user explicitly chose a language
+    if (languageChoice && languageChoice !== "") {
+      const adminList = db.prepare('SELECT * FROM admins WHERE language = ? ORDER BY id ASC').all(languageChoice);
+      let minCount = 31;
+      for (const admin of adminList) {
+        const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
+        if (count < admin.max_count && count < minCount) {
+          minCount = count;
+          assignedGid = admin.gid;
         }
+      }
+      
+      if (!assignedGid && adminList.length > 0) {
+        return res.status(400).json({ success: false, message: `All GSAs for language ${languageChoice} have reached the max limit. Please choose another or select Random.` });
+      } else if (!assignedGid && adminList.length === 0) {
+        return res.status(400).json({ success: false, message: `No GSAs found for language ${languageChoice}.` });
       }
     }
 
@@ -413,7 +423,7 @@ app.delete('/api/ar/registration/:id', authenticateARToken, (req, res) => {
 // --- PUBLIC ROUTE TO FETCH ADMINS ---
 app.get('/api/admins', (req, res) => {
   try {
-    const rows = db.prepare('SELECT gid, name, max_count FROM admins ORDER BY id ASC').all();
+    const rows = db.prepare('SELECT gid, name, max_count, language FROM admins ORDER BY id ASC').all();
     res.json({ success: true, data: rows });
   } catch(e) {
     res.status(500).json({ success: false });
@@ -429,17 +439,17 @@ app.get('/api/super/admins', authenticateToken, (req, res) => {
 });
 
 app.post('/api/super/admins', authenticateToken, (req, res) => {
-  const { gid, name, password, max_count } = req.body;
+  const { gid, name, password, max_count, language } = req.body;
   try {
-    db.prepare('INSERT INTO admins (gid, name, password, max_count) VALUES (?, ?, ?, ?)').run(gid, name, password, max_count || 30);
+    db.prepare('INSERT INTO admins (gid, name, password, max_count, language) VALUES (?, ?, ?, ?, ?)').run(gid, name, password, max_count || 30, language || 'English');
     res.json({ success: true, message: 'Admin added successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'GID already exists or invalid data' }); }
 });
 
 app.put('/api/super/admins/:id', authenticateToken, (req, res) => {
-  const { gid, name, password, max_count } = req.body;
+  const { gid, name, password, max_count, language } = req.body;
   try {
-    db.prepare('UPDATE admins SET gid=?, name=?, password=?, max_count=? WHERE id=?').run(gid, name, password, max_count, req.params.id);
+    db.prepare('UPDATE admins SET gid=?, name=?, password=?, max_count=?, language=? WHERE id=?').run(gid, name, password, max_count, language || 'English', req.params.id);
     res.json({ success: true, message: 'Admin updated successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
 });

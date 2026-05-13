@@ -32,19 +32,34 @@ const successState = document.getElementById('successState');
 const assignedAdminText = document.getElementById('assignedAdminText');
 const adminChoiceSelect = document.getElementById('adminChoice');
 
-// Fetch admins dynamically
 const loadAdmins = async () => {
-  if (!adminChoiceSelect) return;
+  const languageChoiceSelect = document.getElementById('languageChoice');
+  if (!languageChoiceSelect) return;
   try {
     const res = await fetch('/api/admins');
     const data = await res.json();
     if (data.success) {
-      data.data.forEach(admin => {
+      window.adminData = data.data;
+      const languages = [...new Set(data.data.map(a => a.language || 'English'))];
+      languages.forEach(lang => {
         const opt = document.createElement('option');
-        opt.value = admin.gid;
-        opt.textContent = admin.name;
+        opt.value = lang;
+        opt.textContent = lang;
         opt.style.color = 'black';
-        adminChoiceSelect.appendChild(opt);
+        languageChoiceSelect.appendChild(opt);
+      });
+      
+      languageChoiceSelect.addEventListener('change', (e) => {
+        const lang = e.target.value;
+        const displayEl = document.getElementById('gsaNameDisplay');
+        if (lang) {
+          const adminsForLang = window.adminData.filter(a => (a.language || 'English') === lang);
+          if (adminsForLang.length > 0) {
+            displayEl.textContent = "Assigned GSA: " + adminsForLang.map(a => a.name).join(' or ');
+          }
+        } else {
+          displayEl.textContent = "";
+        }
       });
     }
   } catch(e) { console.error('Failed to load admins'); }
@@ -214,7 +229,7 @@ form.addEventListener('submit', async (e) => {
   const name = nameInput.value;
   const mobile = mobileInput.value;
   const email = emailInput.value;
-  const adminChoice = document.getElementById('adminChoice') ? document.getElementById('adminChoice').value : '';
+  const languageChoice = document.getElementById('languageChoice') ? document.getElementById('languageChoice').value : '';
 
   let isValid = true;
   if (!usnRegex.test(usn)) { usnError.classList.add('show'); isValid = false; }
@@ -231,7 +246,7 @@ form.addEventListener('submit', async (e) => {
     const res = await fetch('/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usn, name, mobile, email, adminChoice })
+      body: JSON.stringify({ usn, name, mobile, email, languageChoice })
     });
 
     const data = await res.json();

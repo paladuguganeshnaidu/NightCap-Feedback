@@ -75,6 +75,10 @@
               <label>Max Registrations</label>
               <input type="number" id="adminMax" value="30" required>
             </div>
+            <div class="input-group">
+              <label>Language</label>
+              <input type="text" id="adminLanguage" placeholder="English" required>
+            </div>
           </div>
           <div style="display: flex; gap: 1rem; margin-top: 1rem;">
             <button type="submit" class="primary-btn" id="saveBtn">Save Admin</button>
@@ -99,11 +103,12 @@
                 <th>Name</th>
                 <th>Password</th>
                 <th>Max Limit</th>
+                <th>Language</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="6" style="text-align: center;">Loading data...</td></tr>
+              <tr><td colspan="7" style="text-align: center;">Loading data...</td></tr>
             </tbody>
           </table>
         </div>
