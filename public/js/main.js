@@ -29,7 +29,7 @@ const redirectText = document.getElementById('redirectText');
 const countdownEl = document.getElementById('countdown');
 
 // Validation Regex
-const usnRegex = /^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)\d{3}$/i;
+const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
 const nameRegex = /^[a-zA-Z\s\.]{1,100}$/;
 
 // Audio blip
@@ -70,7 +70,7 @@ usnInput.addEventListener('input', (e) => {
     return;
   }
 
-  const match = val.match(/^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)/i);
+  const match = val.match(/^1NC2[03456789]([A-Z]{2})/i);
   if (match) {
     branchTag.textContent = match[1].toUpperCase();
     branchTag.classList.add('show');

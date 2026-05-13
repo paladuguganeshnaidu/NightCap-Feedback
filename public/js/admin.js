@@ -111,6 +111,8 @@ const fetchConfig = async () => {
     const data = await res.json();
     if (data.success) {
       redirectUrlInput.value = data.redirect_url;
+      const allowedBranchesInput = document.getElementById('allowedBranches');
+      if (allowedBranchesInput) allowedBranchesInput.value = data.allowed_branches || 'CS,CI,CD,IS,EC,EE,ME,CV';
     }
   } catch(e) {}
 };
@@ -118,11 +120,12 @@ const fetchConfig = async () => {
 configForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const url = redirectUrlInput.value;
+  const branches = document.getElementById('allowedBranches').value;
   try {
     const res = await apiFetch('/api/admin/config', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ redirect_url: url })
+      body: JSON.stringify({ redirect_url: url, allowed_branches: branches })
     });
     if (res.ok) {
       configMsg.style.display = 'block';

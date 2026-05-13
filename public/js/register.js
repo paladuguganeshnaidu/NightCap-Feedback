@@ -67,7 +67,7 @@ const loadAdmins = async () => {
 loadAdmins();
 
 // Validation Regex
-const usnRegex = /^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)\d{3}$/i;
+const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
 const nameRegex = /^[a-zA-Z\s\.]{1,100}$/;
 const mobileRegex = /^[0-9]{10}$/;
 
@@ -106,7 +106,7 @@ usnInput.addEventListener('input', (e) => {
     return;
   }
 
-  const match = val.match(/^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)/i);
+  const match = val.match(/^1NC2[03456789]([A-Z]{2})/i);
   if (match) {
     branchTag.textContent = match[1].toUpperCase();
     branchTag.classList.add('show');

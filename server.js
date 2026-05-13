@@ -129,7 +129,7 @@ app.post('/api/submit', submitLimiter, (req, res) => {
   }
 
   // Validate USN
-  const usnRegex = /^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)\d{3}$/i;
+  const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
   if (!usnRegex.test(usn.toUpperCase())) {
     return res.status(400).json({ success: false, message: 'Invalid USN format.' });
   }
@@ -204,8 +204,13 @@ app.post('/api/admin/login', (req, res) => {
 // Get Config
 app.get('/api/admin/config', authenticateToken, (req, res) => {
   try {
-    const row = db.prepare("SELECT value FROM config WHERE key = 'redirect_url'").get();
-    res.json({ success: true, redirect_url: row ? row.value : '' });
+    const rowRedirect = db.prepare("SELECT value FROM config WHERE key = 'redirect_url'").get();
+    const rowBranches = db.prepare("SELECT value FROM config WHERE key = 'allowed_branches'").get();
+    res.json({ 
+      success: true, 
+      redirect_url: rowRedirect ? rowRedirect.value : '',
+      allowed_branches: rowBranches ? rowBranches.value : 'CS,CI,CD,IS,EC,EE,ME,CV'
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Database error.' });
   }
@@ -213,11 +218,12 @@ app.get('/api/admin/config', authenticateToken, (req, res) => {
 
 // Set Config
 app.put('/api/admin/config', authenticateToken, (req, res) => {
-  const { redirect_url } = req.body;
+  const { redirect_url, allowed_branches } = req.body;
   try {
-    const stmt = db.prepare("INSERT INTO config (key, value) VALUES ('redirect_url', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
-    stmt.run(redirect_url || '');
-    logAction('Config Update', `Redirect URL updated to ${redirect_url}`);
+    const stmt = db.prepare("INSERT INTO config (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value");
+    if (redirect_url !== undefined) stmt.run('redirect_url', redirect_url);
+    if (allowed_branches !== undefined) stmt.run('allowed_branches', allowed_branches.toUpperCase());
+    logAction('Config Update', `Redirect URL: ${redirect_url}, Branches: ${allowed_branches}`);
     res.json({ success: true, message: 'Config updated' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Database error.' });
@@ -279,13 +285,22 @@ app.post('/api/register', submitLimiter, (req, res) => {
     return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
-  const usnRegex = /^1NC2[03456789](CS|CI|CD|IS|EC|EE|ME|CV)\d{3}$/i;
+  const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
   const match = usn.toUpperCase().match(usnRegex);
   if (!match) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
   
   const department = match[1].toUpperCase();
 
   try {
+    // Check allowed branches
+    const rowBranches = db.prepare("SELECT value FROM config WHERE key = 'allowed_branches'").get();
+    const allowedBranchesStr = rowBranches ? rowBranches.value : 'CS,CI,CD,IS,EC,EE,ME,CV';
+    const allowedBranches = allowedBranchesStr.split(',').map(b => b.trim().toUpperCase());
+    
+    if (!allowedBranches.includes(department)) {
+      return res.status(400).json({ success: false, message: `Registrations from branch ${department} are currently not allowed.` });
+    }
+
     let assignedGid = null;
     
     // If user explicitly chose a language
