@@ -110,7 +110,16 @@ const logAction = async (action, details) => {
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Redirect .html requests to clean URLs
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html')) {
+    const cleanPath = req.path.slice(0, -5);
+    return res.redirect(301, cleanPath);
+  }
+  next();
+});
+
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 const submitLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
