@@ -55,7 +55,8 @@ const initDB = async () => {
         password TEXT NOT NULL,
         max_count INTEGER DEFAULT 30,
         language TEXT DEFAULT 'English',
-        redirect_url TEXT
+        redirect_url TEXT,
+        is_active BOOLEAN DEFAULT TRUE
       );
       
       CREATE TABLE IF NOT EXISTS config (
@@ -75,6 +76,7 @@ const initDB = async () => {
     // Add columns dynamically in case the tables already exist
     await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS admin_gid TEXT;`);
     await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS redirect_url TEXT;`);
+    await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`);
     // Seed admins if empty
     const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM admins');
     if (parseInt(countRows[0].count) === 0) {
@@ -302,7 +304,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
     let assignedGid = null;
     
     if (adminChoice && adminChoice !== "") {
-      const { rows: adminList } = await pool.query('SELECT * FROM admins WHERE gid = $1', [adminChoice]);
+      const { rows: adminList } = await pool.query('SELECT * FROM admins WHERE gid = $1 AND is_active = TRUE', [adminChoice]);
       let minCount = 31;
       for (const admin of adminList) {
         const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = $1', [admin.gid]);
@@ -319,7 +321,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
         return res.status(400).json({ success: false, message: `No GSA found.` });
       }
     } else if (languageChoice && languageChoice !== "") {
-      const { rows: adminList } = await pool.query('SELECT * FROM admins WHERE language = $1 ORDER BY id ASC', [languageChoice]);
+      const { rows: adminList } = await pool.query('SELECT * FROM admins WHERE language = $1 AND is_active = TRUE ORDER BY id ASC', [languageChoice]);
       let minCount = 31;
       for (const admin of adminList) {
         const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = $1', [admin.gid]);
@@ -468,7 +470,7 @@ app.delete('/api/ar/registration/:id', authenticateARToken, async (req, res) => 
 
 app.get('/api/admins', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT gid, name, max_count, language FROM admins ORDER BY id ASC');
+    const { rows } = await pool.query('SELECT gid, name, max_count, language FROM admins WHERE is_active = TRUE ORDER BY id ASC');
     res.json({ success: true, data: rows });
   } catch(e) {
     res.status(500).json({ success: false });
@@ -484,19 +486,21 @@ app.get('/api/super/admins', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/super/admins', authenticateToken, async (req, res) => {
-  const { gid, name, password, max_count, language } = req.body;
+  const { gid, name, password, max_count, language, is_active } = req.body;
+  const active = is_active !== undefined ? is_active : true;
   try {
-    await pool.query('INSERT INTO admins (gid, name, password, max_count, language) VALUES ($1, $2, $3, $4, $5)', 
-      [gid, name, password, max_count || 30, language || 'English']);
+    await pool.query('INSERT INTO admins (gid, name, password, max_count, language, is_active) VALUES ($1, $2, $3, $4, $5, $6)', 
+      [gid, name, password, max_count || 30, language || 'English', active]);
     res.json({ success: true, message: 'Admin added successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'GID already exists or invalid data' }); }
 });
 
 app.put('/api/super/admins/:id', authenticateToken, async (req, res) => {
-  const { gid, name, password, max_count, language } = req.body;
+  const { gid, name, password, max_count, language, is_active } = req.body;
+  const active = is_active !== undefined ? is_active : true;
   try {
-    await pool.query('UPDATE admins SET gid=$1, name=$2, password=$3, max_count=$4, language=$5 WHERE id=$6', 
-      [gid, name, password, max_count, language || 'English', req.params.id]);
+    await pool.query('UPDATE admins SET gid=$1, name=$2, password=$3, max_count=$4, language=$5, is_active=$6 WHERE id=$7', 
+      [gid, name, password, max_count, language || 'English', active, req.params.id]);
     res.json({ success: true, message: 'Admin updated successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
 });

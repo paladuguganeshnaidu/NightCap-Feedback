@@ -24,6 +24,7 @@ const adminName = document.getElementById('adminName');
 const adminPassword = document.getElementById('adminPassword');
 const adminMax = document.getElementById('adminMax');
 const adminLanguage = document.getElementById('adminLanguage');
+const adminStatus = document.getElementById('adminStatus');
 const saveBtn = document.getElementById('saveBtn');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const formMsg = document.getElementById('formMsg');
@@ -147,6 +148,11 @@ const renderTable = () => {
       <td>${a.max_count}</td>
       <td>${a.language || 'English'}</td>
       <td>
+        <span style="color: ${a.is_active !== false ? 'var(--gemini-green)' : 'var(--gemini-red)'}; font-weight: bold;">
+          ${a.is_active !== false ? 'Active' : 'Inactive'}
+        </span>
+      </td>
+      <td>
         <div style="display:flex; flex-direction:column; gap:0.4rem;">
           <input type="text" readonly value="${window.location.origin}/register.html?gsa=${a.gid}" style="font-size:0.75rem; padding:0.3rem; border-radius:4px; border:1px solid #555; background:rgba(0,0,0,0.3); color:white; cursor:pointer;" onclick="this.select();document.execCommand('copy');alert('Registration Link Copied!')" title="Click to copy Reg Link">
           <input type="text" readonly value="${window.location.origin}/feedback.html?gsa=${a.gid}" style="font-size:0.75rem; padding:0.3rem; border-radius:4px; border:1px solid #555; background:rgba(0,0,0,0.3); color:white; cursor:pointer;" onclick="this.select();document.execCommand('copy');alert('Feedback Link Copied!')" title="Click to copy Feedback Link">
@@ -169,6 +175,7 @@ window.editAdmin = (id) => {
   adminPassword.value = admin.password;
   adminMax.value = admin.max_count;
   adminLanguage.value = admin.language || 'English';
+  adminStatus.value = admin.is_active !== false ? 'true' : 'false';
   formTitle.textContent = 'Edit Admin';
   cancelEditBtn.style.display = 'inline-flex';
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -190,7 +197,8 @@ adminForm.addEventListener('submit', async (e) => {
     name: adminName.value,
     password: adminPassword.value,
     max_count: parseInt(adminMax.value),
-    language: adminLanguage.value
+    language: adminLanguage.value,
+    is_active: adminStatus.value === 'true'
   };
   
   const isEdit = editId.value !== '';

@@ -91,6 +91,13 @@
               <label>Language</label>
               <input type="text" id="adminLanguage" placeholder="English" required>
             </div>
+            <div class="input-group">
+              <label>Status</label>
+              <select id="adminStatus" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); font-size: 1rem; margin-top: 0.5rem;">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
           </div>
           <div style="display: flex; gap: 1rem; margin-top: 1rem;">
             <button type="submit" class="primary-btn" id="saveBtn">Save Admin</button>
@@ -127,6 +134,7 @@
                 <th>Password</th>
                 <th>Max Limit</th>
                 <th>Language</th>
+                <th>Status</th>
                 <th>Special Links</th>
                 <th>Actions</th>
               </tr>
