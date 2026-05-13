@@ -4,115 +4,266 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fun Night with Gemini - Home</title>
-  <link rel="stylesheet" href="/css/style.css?v=5">
+  <title>Google Gemini Student Ambassador 2026</title>
+  <link rel="stylesheet" href="/css/style.css?v=6">
   <style>
+    /* Premium Animated Background */
+    .animated-bg {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      overflow: hidden;
+      z-index: -1;
+      background: var(--bg-color);
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.5;
+      animation: float 20s infinite ease-in-out alternate;
+    }
+    .orb-1 { width: 400px; height: 400px; background: rgba(66, 133, 244, 0.4); top: -10%; left: -10%; animation-delay: 0s; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(155, 114, 203, 0.4); bottom: -20%; right: -10%; animation-delay: -5s; }
+    .orb-3 { width: 300px; height: 300px; background: rgba(52, 168, 83, 0.3); top: 40%; left: 50%; animation-delay: -10s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(50px, 50px) scale(1.1); }
+      100% { transform: translate(-50px, 100px) scale(0.9); }
+    }
+
     /* Hero Section */
     .hero-section {
+      min-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      padding: 4rem 1rem;
+      padding: 2rem;
       position: relative;
-      overflow: hidden;
     }
-    
+
+    .hero-badge {
+      background: rgba(66, 133, 244, 0.1);
+      border: 1px solid rgba(66, 133, 244, 0.3);
+      color: #4285F4;
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      animation: slideDown 1s ease-out forwards;
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+
     .hero-title {
-      font-size: 3rem;
-      background: linear-gradient(135deg, #4285F4, #9b72cb, #ea4335);
+      font-size: clamp(3rem, 8vw, 5rem);
+      line-height: 1.1;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--text-color) 0%, #4285F4 50%, #9b72cb 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
-      font-weight: 800;
+      animation: fadeIn 1.2s ease-out forwards;
+      opacity: 0;
+      letter-spacing: -1.5px;
     }
-    
+
     .hero-subtitle {
-      font-size: 1.2rem;
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
       color: var(--text-color);
-      opacity: 0.8;
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      line-height: 1.6;
+      opacity: 0.7;
+      max-width: 700px;
+      margin-bottom: 3rem;
+      animation: fadeIn 1.5s ease-out forwards;
+      animation-delay: 0.3s;
+      opacity: 0;
     }
 
     .hero-actions {
       display: flex;
-      justify-content: center;
-      gap: 1rem;
-      flex-wrap: wrap;
+      gap: 1.5rem;
+      animation: slideUp 1s ease-out forwards;
+      animation-delay: 0.6s;
+      opacity: 0;
+      transform: translateY(20px);
     }
 
-    /* GSA Showcase */
-    .gsa-showcase {
+    .hero-btn {
+      padding: 1rem 2.5rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary-hero {
+      background: linear-gradient(135deg, #4285F4, #9b72cb);
+      color: white;
+      box-shadow: 0 10px 20px rgba(66, 133, 244, 0.3);
+    }
+
+    .btn-primary-hero:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 15px 25px rgba(66, 133, 244, 0.4);
+    }
+
+    .btn-secondary-hero {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+    }
+
+    .btn-secondary-hero:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-3px);
+    }
+
+    /* Infinite Marquee */
+    .marquee-container {
+      width: 100%;
+      overflow: hidden;
+      padding: 4rem 0;
+      background: rgba(0,0,0,0.02);
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    [data-theme="dark"] .marquee-container {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: calc(250px * 28); /* Adjust based on logo count */
+      animation: scroll 40s linear infinite;
+    }
+
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    .marquee-item {
+      width: 250px;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: grayscale(100%) opacity(0.6);
+      transition: all 0.3s ease;
+    }
+
+    .marquee-item:hover {
+      filter: grayscale(0%) opacity(1);
+      transform: scale(1.1);
+    }
+
+    .marquee-item img {
+      max-width: 100%;
+      max-height: 80px;
+      object-fit: contain;
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(calc(-250px * 14)); }
+    }
+
+    /* Features Section */
+    .features {
+      padding: 6rem 2rem;
       max-width: 1200px;
-      margin: 0 auto 4rem;
-      padding: 0 1rem;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
     }
 
     .section-title {
-      text-align: center;
-      font-size: 2rem;
-      margin-bottom: 3rem;
-      color: var(--text-color);
-      position: relative;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
     }
 
-    .gsa-grid {
+    .feature-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 2rem;
-      justify-items: center;
     }
 
-    .gsa-card {
+    .feature-card {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 1.5rem;
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      backdrop-filter: blur(10px);
-      width: 100%;
-    }
-
-    .gsa-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 12px 24px rgba(66, 133, 244, 0.15);
-      border-color: #4285F4;
-    }
-
-    .gsa-logo {
-      width: 120px;
-      height: 120px;
-      object-fit: contain;
-      margin-bottom: 1rem;
-      border-radius: 12px;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
-    }
-    
-    [data-theme="dark"] .gsa-card {
-      background: rgba(0, 0, 0, 0.2);
-    }
-    
-    /* Feature banners */
-    .banner {
-      width: 100%;
       border-radius: 24px;
-      overflow: hidden;
-      margin-bottom: 3rem;
+      padding: 2.5rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.4s ease;
       position: relative;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
     }
-    .banner img {
-      width: 100%;
-      height: auto;
-      display: block;
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(155, 114, 203, 0.1));
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px);
+      border-color: #9b72cb;
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      background: linear-gradient(135deg, #4285F4, #9b72cb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Animations */
+    @keyframes slideDown { to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease-out;
+    }
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 </head>
 
 <body>
-  <header>
+  <div class="animated-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <header style="background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color);">
     <a href="/" class="logo-container">
       <svg class="gemini-sparkle" viewBox="0 0 24 24">
         <defs>
@@ -123,7 +274,7 @@
         </defs>
         <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
       </svg>
-      <h1 class="title">GSA's 2026</h1>
+      <h1 class="title" style="font-weight: 700;">GSA 2026</h1>
     </a>
     <div style="display: flex; gap: 1rem; align-items: center;">
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
@@ -144,43 +295,90 @@
 
   <main>
     <section class="hero-section">
-      <h1 class="hero-title">Welcome to Fun Night 2026</h1>
-      <p class="hero-subtitle">Brought to you by the Google Student Ambassadors. Join us for an unforgettable evening of technology, innovation, and community.</p>
+      <div class="hero-badge">✨ Empowering Student Developers</div>
+      <h1 class="hero-title">Build the Future with Gemini</h1>
+      <p class="hero-subtitle">Join the elite network of Google Student Ambassadors. Explore AI, lead your campus, and create impact at Fun Night 2026.</p>
       
       <div class="hero-actions">
-        <a href="/register.html" class="primary-btn" style="text-decoration: none; display: inline-flex;">Register Now</a>
-        <a href="/feedback.html" class="btn-secondary" style="text-decoration: none; display: inline-flex;">Submit Feedback</a>
+        <a href="/register.html" class="hero-btn btn-primary-hero">
+          Get Started 
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/feedback.html" class="hero-btn btn-secondary-hero">Provide Feedback</a>
       </div>
     </section>
 
-    <section class="gsa-showcase">
-      <div class="banner">
-        <img src="/images/gsas/Google Gemini Logo on White.png" alt="Google Gemini Student Ambassador">
+    <!-- Infinite Scroll Logo Marquee -->
+    <section class="marquee-container reveal">
+      <div class="marquee-track">
+        <!-- Set 1 -->
+        <div class="marquee-item"><img src="/images/gsas/01 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/02 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/03 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/04 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/05 (9).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/06 (10).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/07 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/08 (12).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/09 (13).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/10 (14).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 01 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 02 (2).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 03 (3).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 04.png" alt="GSA"></div>
+        <!-- Set 2 (Duplicate for infinite scroll) -->
+        <div class="marquee-item"><img src="/images/gsas/01 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/02 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/03 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/04 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/05 (9).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/06 (10).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/07 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/08 (12).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/09 (13).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/10 (14).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 01 (1).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 02 (2).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 03 (3).png" alt="GSA"></div>
+        <div class="marquee-item"><img src="/images/gsas/Logo 04.png" alt="GSA"></div>
       </div>
-      
-      <h2 class="section-title">Meet Our Ambassadors</h2>
-      <div class="gsa-grid">
-        <!-- Gallery of GSA Logos -->
-        <div class="gsa-card"><img src="/images/gsas/01 (1).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/02 (1).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/03 (1).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/04 (1).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/05 (9).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/06 (10).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/07 (1).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/08 (12).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/09 (13).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/10 (14).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/Logo 01 (1).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/Logo 02 (2).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/Logo 03 (3).png" class="gsa-logo"></div>
-        <div class="gsa-card"><img src="/images/gsas/Logo 04.png" class="gsa-logo"></div>
+    </section>
+
+    <!-- Content Sections -->
+    <section class="features">
+      <div class="section-header reveal">
+        <h2 class="section-title">The GSA Experience</h2>
+        <p style="color: var(--text-color); opacity: 0.8; max-width: 600px; margin: 0 auto;">Connect with industry leaders, develop cutting-edge AI skills, and transform your campus community.</p>
       </div>
+
+      <div class="feature-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">🚀</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Exclusive Events</h3>
+          <p style="opacity: 0.8; line-height: 1.6;">Gain VIP access to Google-sponsored hackathons, bootcamps, and the legendary Fun Night.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay: 0.1s;">
+          <div class="feature-icon">🧠</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Gemini AI Access</h3>
+          <p style="opacity: 0.8; line-height: 1.6;">Work hands-on with the latest Gemini models. Build applications that push the boundaries of AI.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay: 0.2s;">
+          <div class="feature-icon">🤝</div>
+          <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Global Network</h3>
+          <p style="opacity: 0.8; line-height: 1.6;">Join a powerful alumni network of developers, engineers, and future tech leaders across the globe.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="reveal" style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(155, 114, 203, 0.05)); border-radius: 40px; margin: 0 2rem 4rem;">
+      <img src="/images/gsas/Google Gemini Logo on White.png" alt="Google Gemini" style="max-height: 80px; margin-bottom: 2rem;">
+      <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">Ready to shape the future?</h2>
+      <a href="/register.html" class="hero-btn btn-primary-hero">Secure Your Spot</a>
     </section>
   </main>
 
   <footer>
-    <p>Fun Night with Gemini &copy; <span id="year"></span></p>
+    <p>Google Gemini Student Ambassador 2026 &copy; <span id="year"></span></p>
   </footer>
 
   <script>
@@ -197,8 +395,21 @@
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('theme', newTheme);
     });
+
+    // Reveal Animation Observer
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
+    
+    const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('active');
+        observer.unobserve(entry.target);
+      });
+    }, revealOptions);
+
+    revealElements.forEach(el => revealOnScroll.observe(el));
   </script>
   <script src="/js/menu.js"></script>
 </body>
 </html>
-
