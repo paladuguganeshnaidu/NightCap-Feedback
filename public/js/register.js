@@ -64,6 +64,7 @@ loadAdmins();
 const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
 const nameRegex = /^[a-zA-Z\s\.]{1,100}$/;
 const mobileRegex = /^[0-9]{10}$/;
+const emailRegex = /^[a-zA-Z0-9._%+-]+@ncetmail\.com$/i;
 
 const playBlip = () => {
   try {
@@ -229,6 +230,11 @@ form.addEventListener('submit', async (e) => {
   if (!usnRegex.test(usn)) { usnError.classList.add('show'); isValid = false; }
   if (!nameRegex.test(name)) { nameError.classList.add('show'); isValid = false; }
   if (!mobileRegex.test(mobile)) { mobileError.classList.add('show'); isValid = false; }
+  if (!emailRegex.test(email)) { 
+    globalError.textContent = 'Only college emails (@ncetmail.com) are allowed.';
+    globalError.classList.add('show');
+    isValid = false;
+  }
 
   if (!isValid) return;
 

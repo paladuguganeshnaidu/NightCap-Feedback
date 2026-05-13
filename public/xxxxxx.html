@@ -99,6 +99,17 @@
         </form>
       </div>
 
+      <!-- Data Management Section -->
+      <div class="admin-section glass">
+        <h2>Data Management</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.8;">Securely clear database tables. This action cannot be undone and deletes live data from the cloud.</p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button class="btn-danger" id="clearFeedbackBtn" style="padding: 0.8rem 1.5rem;">⚠️ Clear All Feedback</button>
+          <button class="btn-danger" id="clearRegistrationsBtn" style="padding: 0.8rem 1.5rem;">⚠️ Clear All Registrations</button>
+        </div>
+        <div id="dataMsg" style="margin-top: 1rem; font-weight: bold; display: none;"></div>
+      </div>
+
       <!-- Admin List Section -->
       <div class="admin-section glass">
         <div class="actions">
@@ -115,11 +126,12 @@
                 <th>Password</th>
                 <th>Max Limit</th>
                 <th>Language</th>
+                <th>Special Links</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="tableBody">
-              <tr><td colspan="7" style="text-align: center;">Loading data...</td></tr>
+              <tr><td colspan="8" style="text-align: center;">Loading data...</td></tr>
             </tbody>
           </table>
         </div>

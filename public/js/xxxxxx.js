@@ -147,7 +147,13 @@ const renderTable = () => {
       <td>${a.max_count}</td>
       <td>${a.language || 'English'}</td>
       <td>
-        <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="editAdmin(${a.id})">Edit</button>
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+          <input type="text" readonly value="${window.location.origin}/register.html?gsa=${a.gid}" style="font-size:0.75rem; padding:0.3rem; border-radius:4px; border:1px solid #555; background:rgba(0,0,0,0.3); color:white; cursor:pointer;" onclick="this.select();document.execCommand('copy');alert('Registration Link Copied!')" title="Click to copy Reg Link">
+          <input type="text" readonly value="${window.location.origin}/index.html?gsa=${a.gid}" style="font-size:0.75rem; padding:0.3rem; border-radius:4px; border:1px solid #555; background:rgba(0,0,0,0.3); color:white; cursor:pointer;" onclick="this.select();document.execCommand('copy');alert('Feedback Link Copied!')" title="Click to copy Feedback Link">
+        </div>
+      </td>
+      <td>
+        <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; margin-bottom: 0.2rem;" onclick="editAdmin(${a.id})">Edit</button>
         <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-red); color: var(--gemini-red);" onclick="deleteAdmin(${a.id})">Del</button>
       </td>
     </tr>
@@ -228,3 +234,38 @@ window.deleteAdmin = async (id) => {
 };
 
 checkAuth();
+
+// Clear Data functionality
+const clearFeedbackBtn = document.getElementById('clearFeedbackBtn');
+const clearRegistrationsBtn = document.getElementById('clearRegistrationsBtn');
+const dataMsg = document.getElementById('dataMsg');
+
+if (clearFeedbackBtn) {
+  clearFeedbackBtn.addEventListener('click', async () => {
+    if (!confirm('WARNING: This will permanently delete ALL feedback submissions from the cloud database. Type "CONFIRM" to proceed.') || prompt('Type CONFIRM to delete all feedback:') !== 'CONFIRM') return;
+    const token = localStorage.getItem('superToken');
+    try {
+      const res = await fetch('/api/super/clear-feedback', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      dataMsg.style.display = 'block';
+      dataMsg.style.color = res.ok ? 'var(--gemini-green)' : 'var(--gemini-red)';
+      dataMsg.textContent = data.message || 'Action failed';
+      setTimeout(() => dataMsg.style.display = 'none', 4000);
+    } catch(e) {}
+  });
+}
+
+if (clearRegistrationsBtn) {
+  clearRegistrationsBtn.addEventListener('click', async () => {
+    if (!confirm('WARNING: This will permanently delete ALL user registrations from the cloud database. Type "CONFIRM" to proceed.') || prompt('Type CONFIRM to delete all registrations:') !== 'CONFIRM') return;
+    const token = localStorage.getItem('superToken');
+    try {
+      const res = await fetch('/api/super/clear-registrations', { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      dataMsg.style.display = 'block';
+      dataMsg.style.color = res.ok ? 'var(--gemini-green)' : 'var(--gemini-red)';
+      dataMsg.textContent = data.message || 'Action failed';
+      setTimeout(() => dataMsg.style.display = 'none', 4000);
+    } catch(e) {}
+  });
+}

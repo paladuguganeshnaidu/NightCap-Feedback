@@ -261,6 +261,10 @@ app.post('/api/register', submitLimiter, async (req, res) => {
   const { usn, name, mobile, email, adminChoice } = req.body;
   if (!usn || !name || !mobile || !email) return res.status(400).json({ success: false, message: 'All fields are required.' });
 
+  if (!email.toLowerCase().endsWith('@ncetmail.com')) {
+    return res.status(400).json({ success: false, message: 'Only college emails (@ncetmail.com) are allowed.' });
+  }
+
   const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
   const match = usn.toUpperCase().match(usnRegex);
   if (!match) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
@@ -457,6 +461,22 @@ app.delete('/api/super/admins/:id', authenticateToken, async (req, res) => {
   try {
     await pool.query('DELETE FROM admins WHERE id=$1', [req.params.id]);
     res.json({ success: true, message: 'Admin deleted successfully' });
+  } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
+});
+
+app.delete('/api/super/clear-feedback', authenticateToken, async (req, res) => {
+  try {
+    await pool.query("TRUNCATE TABLE submissions RESTART IDENTITY CASCADE");
+    logAction('Clear Data', 'Super Admin cleared ALL feedback submissions');
+    res.json({ success: true, message: 'All feedback deleted successfully' });
+  } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
+});
+
+app.delete('/api/super/clear-registrations', authenticateToken, async (req, res) => {
+  try {
+    await pool.query("TRUNCATE TABLE registrations RESTART IDENTITY CASCADE");
+    logAction('Clear Data', 'Super Admin cleared ALL registrations');
+    res.json({ success: true, message: 'All registrations deleted successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
 });
 
