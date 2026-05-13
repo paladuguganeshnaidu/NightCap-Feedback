@@ -143,7 +143,6 @@ const fetchData = async () => {
       regCount.textContent = currentData.length;
     }
   } catch (err) {
-  } catch (err) {
     tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: red;">Failed to load data</td></tr>';
   }
 };
