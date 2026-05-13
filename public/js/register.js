@@ -40,7 +40,7 @@ const loadAdmins = async () => {
     const data = await res.json();
     if (data.success) {
       window.adminData = data.data;
-      const languages = [...new Set(data.data.map(a => a.language || 'English'))];
+      const languages = [...new Set(data.data.map(a => a.language || 'English'))].sort((a, b) => a.localeCompare(b));
       languages.forEach(lang => {
         const opt = document.createElement('option');
         opt.value = lang;

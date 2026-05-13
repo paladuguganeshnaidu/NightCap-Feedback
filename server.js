@@ -301,25 +301,12 @@ app.post('/api/register', submitLimiter, (req, res) => {
       }
       
       if (!assignedGid && adminList.length > 0) {
-        return res.status(400).json({ success: false, message: `All GSAs for language ${languageChoice} have reached the max limit. Please choose another or select Random.` });
+        return res.status(400).json({ success: false, message: `All GSAs for language ${languageChoice} have reached the max limit. Please choose another language.` });
       } else if (!assignedGid && adminList.length === 0) {
         return res.status(400).json({ success: false, message: `No GSAs found for language ${languageChoice}.` });
       }
-    }
-
-    // If no explicit choice or Random, auto-assign
-    if (!assignedGid) {
-      let minCount = 31; // More than max
-      
-      const adminList = db.prepare('SELECT * FROM admins ORDER BY id ASC').all();
-      // Find the admin with the minimum registrations, preferring the original order if tied
-      for (const admin of adminList) {
-        const count = db.prepare('SELECT COUNT(*) as count FROM registrations WHERE admin_gid = ?').get(admin.gid).count;
-        if (count < admin.max_count && count < minCount) {
-          minCount = count;
-          assignedGid = admin.gid;
-        }
-      }
+    } else {
+      return res.status(400).json({ success: false, message: 'Please select a language.' });
     }
 
     if (!assignedGid) {
