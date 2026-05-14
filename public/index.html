@@ -254,6 +254,7 @@
       transform: translateY(0);
     }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
 
 <body>
@@ -370,6 +371,28 @@
       </div>
     </section>
 
+    <section class="features" style="padding-top: 0;">
+      <div class="section-header reveal">
+        <h2 class="section-title">Achievements & Recognition</h2>
+        <p style="color: var(--text-color); opacity: 0.8; max-width: 600px; margin: 0 auto;">Proud moments and official certifications from the Fun Night event.</p>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; width: 100%;">
+        <div class="feature-card reveal" style="padding: 1.5rem; flex: 1 1 400px; max-width: 600px; display: flex; flex-direction: column; align-items: center; pointer-events: none; user-select: none;">
+          <h3 style="font-size: 1.2rem; margin-bottom: 1rem; text-align: center;">Top Prompt Creator</h3>
+          <div style="width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden; background: white;">
+            <canvas id="cert1Canvas" style="width: 100%; display: block;"></canvas>
+          </div>
+        </div>
+        <div class="feature-card reveal" style="transition-delay: 0.1s; padding: 1.5rem; flex: 1 1 400px; max-width: 600px; display: flex; flex-direction: column; align-items: center; pointer-events: none; user-select: none;">
+          <h3 style="font-size: 1.2rem; margin-bottom: 1rem; text-align: center;">Certificate of Participation</h3>
+          <div style="width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden; background: white;">
+            <canvas id="cert2Canvas" style="width: 100%; display: block;"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="reveal" style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(66, 133, 244, 0.05), rgba(155, 114, 203, 0.05)); border-radius: 40px; margin: 0 2rem 4rem;">
       <img src="/images/gsas/Google Gemini Logo on White.png" alt="Google Gemini" style="max-height: 80px; margin-bottom: 2rem;">
       <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">Ready to shape the future?</h2>
@@ -409,6 +432,41 @@
     }, revealOptions);
 
     revealElements.forEach(el => revealOnScroll.observe(el));
+
+    // Render PDFs to Canvas
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    
+    async function renderPDF(url, canvasId) {
+      try {
+        const loadingTask = pdfjsLib.getDocument(url);
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const context = canvas.getContext('2d');
+        
+        // Render at a high resolution (scale 2) to ensure it looks crisp on high-DPI screens
+        const scale = 2.5; 
+        const viewport = page.getViewport({ scale: scale });
+        
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport
+        };
+        await page.render(renderContext).promise;
+      } catch (err) {
+        console.error('Error rendering PDF:', err);
+      }
+    }
+    
+    window.addEventListener('load', () => {
+      renderPDF('/images/cert1.pdf', 'cert1Canvas');
+      renderPDF('/images/cert2.pdf', 'cert2Canvas');
+    });
   </script>
   <script src="/js/menu.js"></script>
 </body>
