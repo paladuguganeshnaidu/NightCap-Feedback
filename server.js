@@ -110,11 +110,12 @@ const logAction = async (action, details) => {
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
-// Redirect .html requests to clean URLs
+// Redirect .html requests to clean URLs and preserve query strings
 app.use((req, res, next) => {
   if (req.path.endsWith('.html')) {
     const cleanPath = req.path.slice(0, -5);
-    return res.redirect(301, cleanPath);
+    const queryString = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+    return res.redirect(301, cleanPath + queryString);
   }
   next();
 });
