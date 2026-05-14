@@ -571,6 +571,10 @@ app.delete('/api/super/clear-registrations', authenticateToken, async (req, res)
   } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
 });
 
+app.get('/sitemap.xml', (req, res) => {
+  res.sendFile(path.join(__dirname, 'sitemap.xml'));
+});
+
 app.use((req, res, next) => {
   res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
 });
