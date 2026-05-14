@@ -120,6 +120,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// Validate GSA parameter for register and feedback links
+app.use(async (req, res, next) => {
+  const isTargetRoute = req.path === '/register' || req.path === '/feedback';
+  if (isTargetRoute && req.query.gsa) {
+    try {
+      const { rows } = await pool.query('SELECT id FROM admins WHERE gid = $1 AND is_active = TRUE', [req.query.gsa]);
+      if (rows.length === 0) {
+        return res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+      }
+    } catch (e) {
+      console.error("GSA Validation Error", e);
+    }
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 const submitLimiter = rateLimit({
