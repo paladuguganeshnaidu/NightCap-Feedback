@@ -327,8 +327,9 @@ app.post('/api/register', submitLimiter, async (req, res) => {
   mobile = xss(mobile);
   email = xss(email);
 
-  if (!email.toLowerCase().endsWith('@ncetmail.com')) {
-    return res.status(400).json({ success: false, message: 'Only college emails (@ncetmail.com) are allowed.' });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ success: false, message: 'Invalid email format.' });
   }
 
   const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
