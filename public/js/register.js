@@ -111,7 +111,7 @@ const playBlip = () => {
 
 // Real-time Validation
 usnInput.addEventListener('input', (e) => {
-  const val = e.target.value.toUpperCase();
+  const val = e.target.value.toUpperCase().replace(/\s+/g, '');
   e.target.value = val;
   
   if (val.length === 0) {
@@ -140,7 +140,8 @@ usnInput.addEventListener('input', (e) => {
 });
 
 usnInput.addEventListener('blur', () => {
-  if (usnInput.value && !usnRegex.test(usnInput.value)) {
+  const val = usnInput.value.replace(/\s+/g, '');
+  if (val && !usnRegex.test(val)) {
     usnError.classList.add('show');
   }
 });
@@ -240,7 +241,7 @@ form.addEventListener('submit', async (e) => {
   globalError.textContent = '';
   globalError.classList.remove('show');
 
-  const usn = usnInput.value;
+  const usn = usnInput.value.replace(/\s+/g, '');
   const name = nameInput.value;
   const mobile = mobileInput.value;
   const email = emailInput.value;

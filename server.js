@@ -346,7 +346,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
   let { usn, name, mobile, email, adminChoice, languageChoice } = req.body;
   if (!usn || !name || !mobile || !email) return res.status(400).json({ success: false, message: 'All fields are required.' });
   
-  usn = xss(usn);
+  usn = xss(usn).replace(/\s+/g, '');
   name = xss(name);
   mobile = xss(mobile);
   email = xss(email);
@@ -584,7 +584,7 @@ app.post('/api/ar/registration', authenticateARToken, async (req, res) => {
   let { usn, name, mobile, email, department } = req.body;
   if (!usn || !name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'All fields are required.' });
   
-  usn = xss(usn); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
+  usn = xss(usn).replace(/\s+/g, ''); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
   
   try {
     // Check limit
@@ -613,7 +613,7 @@ app.put('/api/ar/registration/:id', authenticateARToken, async (req, res) => {
   let { usn, name, mobile, email, department } = req.body;
   if (!usn || !name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'All fields are required.' });
   
-  usn = xss(usn); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
+  usn = xss(usn).replace(/\s+/g, ''); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
   
   try {
     const result = await pool.query('UPDATE registrations SET usn=$1, name=$2, mobile=$3, email=$4, department=$5 WHERE id=$6 AND admin_gid=$7', 
