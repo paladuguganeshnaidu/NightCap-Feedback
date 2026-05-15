@@ -184,7 +184,7 @@ if (redirectForm) {
 const fetchFeedback = async () => {
   const fbTableBody = document.getElementById('fbTableBody');
   const fbCount = document.getElementById('fbCount');
-  fbTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Loading feedback...</td></tr>';
+  fbTableBody.innerHTML = '<tr><td colspan="13" style="text-align: center;">Loading feedback...</td></tr>';
   try {
     const token = localStorage.getItem('arToken');
     const res = await fetch('/api/ar/feedback', {
@@ -194,20 +194,29 @@ const fetchFeedback = async () => {
     if (data.success) {
       fbCount.textContent = data.data.length;
       if (data.data.length === 0) {
-        fbTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No feedback found for your registrations.</td></tr>';
+        fbTableBody.innerHTML = '<tr><td colspan="13" style="text-align: center;">No feedback found for your registrations.</td></tr>';
       } else {
         fbTableBody.innerHTML = data.data.map(r => `
           <tr>
             <td>#${r.id}</td>
             <td style="font-weight: bold; color: var(--gemini-purple);">${r.usn}</td>
             <td>${r.name}</td>
+            <td>${r.college_name || '-'}</td>
+            <td>${r.college_url ? `<a href="${r.college_url}" target="_blank">Link</a>` : '-'}</td>
+            <td>${r.year_of_study || '-'}</td>
+            <td>${r.branch_major || '-'}</td>
+            <td>${r.state || '-'}</td>
+            <td>${r.city || '-'}</td>
+            <td>${r.gmail_address || '-'}</td>
+            <td>${r.phone_number || '-'}</td>
+            <td>${r.nano_banana_link ? `<a href="${r.nano_banana_link}" target="_blank">Link</a>` : '-'}</td>
             <td>${new Date(r.submitted_at + 'Z').toLocaleString()}</td>
           </tr>
         `).join('');
       }
     }
   } catch (err) {
-    fbTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Failed to load feedback</td></tr>';
+    fbTableBody.innerHTML = '<tr><td colspan="13" style="text-align: center; color: red;">Failed to load feedback</td></tr>';
   }
 };
 

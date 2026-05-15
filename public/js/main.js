@@ -121,6 +121,16 @@ form.addEventListener('submit', async (e) => {
 
   const usn = usnInput.value;
   const name = nameInput.value;
+  const college_name = document.getElementById('college_name').value;
+  const college_url = document.getElementById('college_url').value;
+  const year_of_study_el = document.querySelector('input[name="year_of_study"]:checked');
+  const year_of_study = year_of_study_el ? year_of_study_el.value : '';
+  const branch_major = document.getElementById('branch_major').value;
+  const state = document.getElementById('state').value;
+  const city = document.getElementById('city').value;
+  const gmail_address = document.getElementById('gmail_address').value;
+  const phone_number = document.getElementById('phone_number').value;
+  const nano_banana_link = document.getElementById('nano_banana_link').value;
 
   let isValid = true;
   if (!usnRegex.test(usn)) {
@@ -143,7 +153,19 @@ form.addEventListener('submit', async (e) => {
     const res = await fetch('/api/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usn, name })
+      body: JSON.stringify({ 
+        usn, 
+        name,
+        college_name,
+        college_url,
+        year_of_study,
+        branch_major,
+        state,
+        city,
+        gmail_address,
+        phone_number,
+        nano_banana_link
+      })
     });
 
     const data = await res.json();

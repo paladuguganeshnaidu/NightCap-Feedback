@@ -77,6 +77,15 @@ const initDB = async () => {
 
     // Add columns dynamically in case the tables already exist
     await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS admin_gid TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS college_name TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS college_url TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS year_of_study TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS branch_major TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS state TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS city TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS gmail_address TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS phone_number TEXT;`);
+    await pool.query(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS nano_banana_link TEXT;`);
     await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS redirect_url TEXT;`);
     await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`);
     // Seed admins if empty
@@ -169,11 +178,20 @@ const authenticateToken = (req, res, next) => {
 
 // Submit
 app.post('/api/submit', submitLimiter, async (req, res) => {
-  let { usn, name } = req.body;
+  let { usn, name, college_name, college_url, year_of_study, branch_major, state, city, gmail_address, phone_number, nano_banana_link } = req.body;
   if (!usn || !name) return res.status(400).json({ success: false, message: 'USN and Name are required.' });
   
   usn = xss(usn);
   name = xss(name);
+  college_name = college_name ? xss(college_name) : '';
+  college_url = college_url ? xss(college_url) : '';
+  year_of_study = year_of_study ? xss(year_of_study) : '';
+  branch_major = branch_major ? xss(branch_major) : '';
+  state = state ? xss(state) : '';
+  city = city ? xss(city) : '';
+  gmail_address = gmail_address ? xss(gmail_address) : '';
+  phone_number = phone_number ? xss(phone_number) : '';
+  nano_banana_link = nano_banana_link ? xss(nano_banana_link) : '';
 
   const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
   if (!usnRegex.test(usn.toUpperCase())) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
@@ -189,7 +207,8 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
     const adminGid = regRows[0].admin_gid;
 
     // 2. Insert into submissions
-    await pool.query('INSERT INTO submissions (usn, name, admin_gid) VALUES ($1, $2, $3)', [usn.toUpperCase(), name.trim(), adminGid]);
+    await pool.query('INSERT INTO submissions (usn, name, college_name, college_url, year_of_study, branch_major, state, city, gmail_address, phone_number, nano_banana_link, admin_gid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)', 
+      [usn.toUpperCase(), name.trim(), college_name.trim(), college_url.trim(), year_of_study.trim(), branch_major.trim(), state.trim(), city.trim(), gmail_address.trim(), phone_number.trim(), nano_banana_link.trim(), adminGid]);
     
     // 3. Get custom redirect URL for this specific admin
     const { rows: adminRows } = await pool.query('SELECT redirect_url FROM admins WHERE gid = $1', [adminGid]);
@@ -223,11 +242,11 @@ app.get('/api/submissions', async (req, res) => {
 // Export CSV
 app.get('/api/export', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT usn, name, submitted_at FROM submissions ORDER BY id DESC');
-    let csv = 'USN,Name,Submitted At\n';
+    const { rows } = await pool.query('SELECT usn, name, college_name, college_url, year_of_study, branch_major, state, city, gmail_address, phone_number, nano_banana_link, submitted_at FROM submissions ORDER BY id DESC');
+    let csv = 'USN,Name,College Name,College URL,Year of Study,Branch / Major,State,City,Gmail Address,Phone Number,Nano Banana Link,Submitted At\n';
     rows.forEach(row => {
       const safeName = row.name.replace(/"/g, '""');
-      csv += `"${row.usn}","${safeName}","${row.submitted_at}"\n`;
+      csv += `"${row.usn}","${safeName}","${row.college_name || ''}","${row.college_url || ''}","${row.year_of_study || ''}","${row.branch_major || ''}","${row.state || ''}","${row.city || ''}","${row.gmail_address || ''}","${row.phone_number || ''}","${row.nano_banana_link || ''}","${row.submitted_at}"\n`;
     });
     res.header('Content-Type', 'text/csv');
     res.attachment('submissions.csv');
@@ -474,7 +493,7 @@ app.get('/api/ar/registrations', authenticateARToken, async (req, res) => {
 app.get('/api/ar/feedback', authenticateARToken, async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT s.id, s.usn, s.name, s.submitted_at 
+      SELECT s.id, s.usn, s.name, s.college_name, s.college_url, s.year_of_study, s.branch_major, s.state, s.city, s.gmail_address, s.phone_number, s.nano_banana_link, s.submitted_at 
       FROM submissions s
       JOIN registrations r ON s.usn = r.usn
       WHERE r.admin_gid = $1

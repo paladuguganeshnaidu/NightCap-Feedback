@@ -57,6 +57,57 @@
           <div class="error-msg" id="nameError">Name must contain only letters, spaces, or dots (max 100 chars).</div>
         </div>
 
+        <div class="input-group">
+          <label for="college_name">College / University Name</label>
+          <input type="text" id="college_name" name="college_name" placeholder="e.g., John Doe College" required>
+        </div>
+
+        <div class="input-group">
+          <label for="college_url">College / University Website URL</label>
+          <input type="url" id="college_url" name="college_url" placeholder="https://...">
+        </div>
+
+        <div class="input-group">
+          <label style="margin-bottom: 0.5rem; display: block;">Year of Study</label>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="year_of_study" value="1st year" required> 1st year</label>
+            <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="year_of_study" value="2nd year"> 2nd year</label>
+            <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="year_of_study" value="3rd year"> 3rd year</label>
+            <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="year_of_study" value="4th year"> 4th year</label>
+            <label style="display: flex; align-items: center; gap: 0.3rem;"><input type="radio" name="year_of_study" value="5th year"> 5th year</label>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="branch_major">Branch / Major</label>
+          <input type="text" id="branch_major" name="branch_major" placeholder="e.g. Computer Science" required>
+        </div>
+
+        <div class="input-group">
+          <label for="state">Select State</label>
+          <input type="text" id="state" name="state" placeholder="e.g., Karnataka" required>
+        </div>
+
+        <div class="input-group">
+          <label for="city">City</label>
+          <input type="text" id="city" name="city" placeholder="City" required>
+        </div>
+
+        <div class="input-group">
+          <label for="gmail_address">Gmail Address</label>
+          <input type="email" id="gmail_address" name="gmail_address" placeholder="e.g. user@gmail.com" required>
+        </div>
+
+        <div class="input-group">
+          <label for="phone_number">Phone Number</label>
+          <input type="tel" id="phone_number" name="phone_number" placeholder="Phone Number" required>
+        </div>
+
+        <div class="input-group">
+          <label for="nano_banana_link">Nano Banana Generation Link</label>
+          <input type="url" id="nano_banana_link" name="nano_banana_link" placeholder="URL text">
+        </div>
+
         <div id="globalError" class="error-msg" style="margin-bottom: 1rem; text-align: center;"></div>
 
         <button type="submit" class="primary-btn" id="submitBtn">
