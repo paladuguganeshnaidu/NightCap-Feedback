@@ -75,6 +75,19 @@ const loadAdmins = async () => {
 };
 loadAdmins();
 
+const loadRegistrationCount = async () => {
+  const globalRegCount = document.getElementById('globalRegCount');
+  if (!globalRegCount) return;
+  try {
+    const res = await fetch('/api/public/registration-count');
+    const data = await res.json();
+    if (data.success) {
+      globalRegCount.textContent = data.count;
+    }
+  } catch(e) { console.error('Failed to load count'); }
+};
+loadRegistrationCount();
+
 // Validation Regex
 const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
 const nameRegex = /^[a-zA-Z\s\.]{1,100}$/;

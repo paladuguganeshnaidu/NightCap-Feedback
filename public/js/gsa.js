@@ -236,7 +236,7 @@ const renderFeedback = () => {
       <td>${r.state || '-'}</td>
       <td>${r.city || '-'}</td>
       <td>${r.nano_banana_link ? `<a href="${r.nano_banana_link}" target="_blank">Link</a>` : '-'}</td>
-      <td>${new Date(r.submitted_at + 'Z').toLocaleString()}</td>
+      <td>${new Date(r.submitted_at).toLocaleString()}</td>
       <td>
         ${!r.is_deleted ? 
           `<button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-red); color: var(--gemini-red);" onclick="deleteFeedback(${r.id})">Delete</button>` :
@@ -328,7 +328,10 @@ const renderTable = (rows) => {
       <td>${r.email}</td>
       <td><span class="branch-tag show" style="position: static; transform: none; display: inline-block;">${r.department}</span></td>
       <td style="font-size: 0.85rem; opacity: 0.8;">${new Date(r.registered_at).toLocaleString()}</td>
-      <td><button class="btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-color: var(--gemini-red); color: var(--gemini-red);" onclick="removeRegistration(${r.id})">Remove</button></td>
+      <td>
+        <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-purple); color: var(--gemini-purple); margin-bottom: 5px;" onclick="editRegistration(${r.id})">Edit</button>
+        <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-red); color: var(--gemini-red);" onclick="removeRegistration(${r.id})">Remove</button>
+      </td>
     </tr>
     `;
   }).join('');
@@ -364,6 +367,103 @@ window.removeRegistration = async (id) => {
     alert('Network error');
   }
 };
+
+// Add/Edit Registration Logic
+const addRegBtn = document.getElementById('addRegBtn');
+const regModal = document.getElementById('regModal');
+const closeRegModal = document.getElementById('closeRegModal');
+const regForm = document.getElementById('regForm');
+const regModalTitle = document.getElementById('regModalTitle');
+const regId = document.getElementById('regId');
+const regUsn = document.getElementById('regUsn');
+const regName = document.getElementById('regName');
+const regMobile = document.getElementById('regMobile');
+const regEmail = document.getElementById('regEmail');
+const regDept = document.getElementById('regDept');
+const regError = document.getElementById('regError');
+
+if (addRegBtn) {
+  addRegBtn.addEventListener('click', () => {
+    regModalTitle.textContent = 'Add Registration';
+    regId.value = '';
+    regUsn.value = '';
+    regName.value = '';
+    regMobile.value = '';
+    regEmail.value = '';
+    regDept.value = '';
+    regError.style.display = 'none';
+    regModal.style.display = 'flex';
+  });
+}
+
+if (closeRegModal) {
+  closeRegModal.addEventListener('click', () => {
+    regModal.style.display = 'none';
+  });
+}
+
+window.editRegistration = (id) => {
+  const reg = currentData.find(r => r.id === id);
+  if (!reg) return;
+  regModalTitle.textContent = 'Edit Registration';
+  regId.value = reg.id;
+  regUsn.value = reg.usn;
+  regName.value = reg.name;
+  regMobile.value = reg.mobile;
+  regEmail.value = reg.email;
+  regDept.value = reg.department;
+  regError.style.display = 'none';
+  regModal.style.display = 'flex';
+};
+
+if (regForm) {
+  regForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    regError.style.display = 'none';
+    const submitBtn = regForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    const payload = {
+      usn: regUsn.value.trim(),
+      name: regName.value.trim(),
+      mobile: regMobile.value.trim(),
+      email: regEmail.value.trim(),
+      department: regDept.value.trim()
+    };
+    
+    const id = regId.value;
+    const url = id ? `/api/ar/registration/${id}` : '/api/ar/registration';
+    const method = id ? 'PUT' : 'POST';
+    
+    try {
+      const token = localStorage.getItem('arToken');
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        regModal.style.display = 'none';
+        fetchData();
+      } else {
+        regError.textContent = data.message || 'Failed to save';
+        regError.style.display = 'block';
+      }
+    } catch (err) {
+      regError.textContent = 'Network Error';
+      regError.style.display = 'block';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save';
+    }
+  });
+}
+
 
 refreshBtn.addEventListener('click', () => {
   fetchData();

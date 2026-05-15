@@ -332,6 +332,15 @@ app.get('/api/admin/logs', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/api/public/registration-count', async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT COUNT(*) as count FROM registrations');
+    res.json({ success: true, count: parseInt(rows[0].count) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
 // --- REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, async (req, res) => {
   let { usn, name, mobile, email, adminChoice, languageChoice } = req.body;
@@ -567,6 +576,52 @@ app.delete('/api/ar/registration/:id', authenticateARToken, async (req, res) => 
       res.status(404).json({ success: false, message: 'Registration not found or you do not have permission to delete it.' });
     }
   } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+app.post('/api/ar/registration', authenticateARToken, async (req, res) => {
+  let { usn, name, mobile, email, department } = req.body;
+  if (!usn || !name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'All fields are required.' });
+  
+  usn = xss(usn); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
+  
+  try {
+    // Check limit
+    const { rows: adminList } = await pool.query(`SELECT a.max_count, COUNT(r.id) as current_count FROM admins a LEFT JOIN registrations r ON a.gid = r.admin_gid WHERE a.gid = $1 GROUP BY a.id`, [req.user.gid]);
+    if(adminList.length > 0 && parseInt(adminList[0].current_count) >= adminList[0].max_count) {
+      return res.status(400).json({ success: false, message: 'You have reached your maximum registration limit.' });
+    }
+
+    let reg_id = '';
+    while (true) {
+      const tempId = Math.floor(1000 + Math.random() * 9000).toString();
+      const { rows } = await pool.query('SELECT 1 FROM registrations WHERE reg_id = $1', [tempId]);
+      if (rows.length === 0) { reg_id = tempId; break; }
+    }
+
+    await pool.query('INSERT INTO registrations (reg_id, usn, name, mobile, email, department, admin_gid) VALUES ($1, $2, $3, $4, $5, $6, $7)', 
+      [reg_id, usn.toUpperCase(), name.trim(), mobile.trim(), email.trim(), department.toUpperCase(), req.user.gid]);
+    res.json({ success: true, message: 'Registration added successfully' });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ success: false, message: "This USN is already registered." });
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+app.put('/api/ar/registration/:id', authenticateARToken, async (req, res) => {
+  let { usn, name, mobile, email, department } = req.body;
+  if (!usn || !name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'All fields are required.' });
+  
+  usn = xss(usn); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
+  
+  try {
+    const result = await pool.query('UPDATE registrations SET usn=$1, name=$2, mobile=$3, email=$4, department=$5 WHERE id=$6 AND admin_gid=$7', 
+      [usn.toUpperCase(), name.trim(), mobile.trim(), email.trim(), department.toUpperCase(), req.params.id, req.user.gid]);
+    if(result.rowCount === 0) return res.status(404).json({ success: false, message: 'Not found or no permission' });
+    res.json({ success: true, message: 'Registration updated successfully' });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ success: false, message: "This USN is already registered." });
     res.status(500).json({ success: false, message: 'Database error.' });
   }
 });
