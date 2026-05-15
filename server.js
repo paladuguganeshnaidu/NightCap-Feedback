@@ -390,7 +390,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
       }
       
       if (!assignedGid && adminList.length > 0) {
-        return res.status(400).json({ success: false, message: `The selected GSA has reached the max limit.` });
+        return res.status(400).json({ success: false, message: `sorry you are late , slots over` });
       } else if (!assignedGid && adminList.length === 0) {
         return res.status(400).json({ success: false, message: `No GSA found.` });
       }
@@ -412,7 +412,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
         }
       }
       if (!assignedGid && adminList.length > 0) {
-        return res.status(400).json({ success: false, message: `All GSAs speaking ${languageChoice} have reached their limit.` });
+        return res.status(400).json({ success: false, message: `sorry you are late , slots over` });
       } else if (!assignedGid && adminList.length === 0) {
         return res.status(400).json({ success: false, message: `No GSA found speaking ${languageChoice}.` });
       }
@@ -420,7 +420,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
       return res.status(400).json({ success: false, message: `Please select a language.` });
     }
 
-    if (!assignedGid) return res.status(400).json({ success: false, message: 'Registration is full. No available slots.' });
+    if (!assignedGid) return res.status(400).json({ success: false, message: 'sorry you are late , slots over' });
 
     const { rows: adminInfoRows } = await pool.query('SELECT * FROM admins WHERE gid = $1', [assignedGid]);
     const adminInfo = adminInfoRows[0];
@@ -590,7 +590,7 @@ app.post('/api/ar/registration', authenticateARToken, async (req, res) => {
     // Check limit
     const { rows: adminList } = await pool.query(`SELECT a.max_count, COUNT(r.id) as current_count FROM admins a LEFT JOIN registrations r ON a.gid = r.admin_gid WHERE a.gid = $1 GROUP BY a.id`, [req.user.gid]);
     if(adminList.length > 0 && parseInt(adminList[0].current_count) >= adminList[0].max_count) {
-      return res.status(400).json({ success: false, message: 'You have reached your maximum registration limit.' });
+      return res.status(400).json({ success: false, message: 'sorry you are late , slots over' });
     }
 
     let reg_id = '';
