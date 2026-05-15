@@ -375,7 +375,7 @@ button.primary-btn:disabled {
 
 .success-state h2 {
   color: var(--gemini-green);
-  margin-bottom: 1rem;
+  margin-top: 5rem;
   font-size: 2.5rem;
 }
 
@@ -471,7 +471,7 @@ td {
 .actions {
   display: flex;
   gap: 15px;
-  margin-bottom: 1rem;
+  margin-top: 5rem;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
@@ -773,7 +773,7 @@ td {
 /* Floating 3D Cube */
 .cube-container {
   position: fixed;
-  bottom: 2rem;
+  top: 6rem;
   right: 2rem;
   width: 60px;
   height: 60px;
@@ -805,8 +805,8 @@ td {
 }
 
 .cube-face img {
-  width: 70%;
-  height: 70%;
+  width: 90%; opacity: 0.4; position: absolute;
+  height: 90%;
   object-fit: contain;
 }
 
@@ -824,7 +824,7 @@ td {
 
 @media (max-width: 768px) {
   .cube-container {
-    bottom: 1rem;
+    top: 5rem;
     right: 1rem;
     width: 40px;
     height: 40px;
@@ -840,3 +840,17 @@ td {
   .cube-face--top    { transform: rotateX( 90deg) translateZ(20px); }
   .cube-face--bottom { transform: rotateX(-90deg) translateZ(20px); }
 }
+
+.cube-count {
+  position: absolute;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: white;
+  text-shadow: 0 0 5px rgba(0,0,0,0.8), 0 0 10px var(--gemini-purple);
+  z-index: 2;
+}
+@media (max-width: 768px) {
+  .cube-count { font-size: 1rem; }
+}
+

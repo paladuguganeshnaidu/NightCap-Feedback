@@ -76,15 +76,7 @@ const loadAdmins = async () => {
 loadAdmins();
 
 const loadRegistrationCount = async () => {
-  const globalRegCount = document.getElementById('globalRegCount');
-  if (!globalRegCount) return;
-  try {
-    const res = await fetch('/api/public/registration-count');
-    const data = await res.json();
-    if (data.success) {
-      globalRegCount.textContent = data.count;
-    }
-  } catch(e) { console.error('Failed to load count'); }
+  try { const res = await fetch('/api/public/registration-count'); const data = await res.json(); if (data.success) { document.querySelectorAll('.cube-count').forEach(el => el.textContent = data.count); } } catch(e) { console.error('Failed to load count'); }
 };
 loadRegistrationCount();
 
@@ -305,3 +297,4 @@ form.addEventListener('submit', async (e) => {
     btnSpinner.style.display = 'none';
   }
 });
+

@@ -511,3 +511,15 @@ mailForm.addEventListener('submit', (e) => {
 
 // Init
 checkAuth();
+
+const loadGlobalRegistrationCount = async () => {
+  try {
+    const res = await fetch('/api/public/registration-count');
+    const data = await res.json();
+    if (data.success) {
+      document.querySelectorAll('.cube-count').forEach(el => el.textContent = data.count);
+    }
+  } catch(e) { console.error('Failed to load count'); }
+};
+loadGlobalRegistrationCount();
+
