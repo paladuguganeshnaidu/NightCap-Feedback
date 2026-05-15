@@ -148,8 +148,12 @@
       <!-- Feedback Section -->
       <div class="admin-section glass">
         <div class="actions">
-          <div class="actions-left">
+          <div class="actions-left" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
             <h2>Feedback Received (<span id="fbCount">0</span>)</h2>
+            <input type="text" id="fbSearchInput" placeholder="Search by Reg ID, USN or Name..." style="padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color); font-family: 'Inter', sans-serif;">
+          </div>
+          <div class="actions-right">
+            <button id="recycleBinBtn" class="btn-secondary" style="border-color: var(--gemini-purple); color: var(--gemini-purple);">🗑️ Recycle Bin</button>
           </div>
         </div>
 
@@ -157,23 +161,21 @@
           <table id="fbTable">
             <thead>
               <tr>
-                <th>ID</th>
+                <th>Reg ID</th>
                 <th>USN</th>
                 <th>Name</th>
                 <th>College</th>
-                <th>Website</th>
                 <th>Year</th>
                 <th>Branch</th>
                 <th>State</th>
                 <th>City</th>
-                <th>Gmail</th>
-                <th>Phone</th>
                 <th>Nano Banana Link</th>
                 <th>Submitted At</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="fbTableBody">
-              <tr><td colspan="13" style="text-align: center;">Loading feedback...</td></tr>
+              <tr><td colspan="12" style="text-align: center;">Loading feedback...</td></tr>
             </tbody>
           </table>
         </div>

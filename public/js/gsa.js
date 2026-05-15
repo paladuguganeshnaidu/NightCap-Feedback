@@ -181,10 +181,78 @@ if (redirectForm) {
   });
 }
 
-const fetchFeedback = async () => {
+let allFeedback = [];
+let showRecycleBin = false;
+
+const fbSearchInput = document.getElementById('fbSearchInput');
+const recycleBinBtn = document.getElementById('recycleBinBtn');
+
+if (fbSearchInput) {
+  fbSearchInput.addEventListener('input', () => renderFeedback());
+}
+
+if (recycleBinBtn) {
+  recycleBinBtn.addEventListener('click', () => {
+    showRecycleBin = !showRecycleBin;
+    recycleBinBtn.textContent = showRecycleBin ? '⬅️ Back to Active' : '🗑️ Recycle Bin';
+    renderFeedback();
+  });
+}
+
+const renderFeedback = () => {
   const fbTableBody = document.getElementById('fbTableBody');
   const fbCount = document.getElementById('fbCount');
-  fbTableBody.innerHTML = '<tr><td colspan="13" style="text-align: center;">Loading feedback...</td></tr>';
+  if (!fbTableBody) return;
+
+  const term = (fbSearchInput ? fbSearchInput.value : '').toLowerCase();
+  
+  const filtered = allFeedback.filter(r => {
+    const inBin = r.is_deleted === true;
+    if (showRecycleBin !== inBin) return false;
+    
+    if (term) {
+      return (r.usn && r.usn.toLowerCase().includes(term)) ||
+             (r.name && r.name.toLowerCase().includes(term)) ||
+             (r.reg_id && String(r.reg_id).includes(term));
+    }
+    return true;
+  });
+
+  if(fbCount) fbCount.textContent = filtered.length;
+  
+  if (filtered.length === 0) {
+    fbTableBody.innerHTML = '<tr><td colspan="12" style="text-align: center;">No feedback found.</td></tr>';
+    return;
+  }
+  
+  fbTableBody.innerHTML = filtered.map(r => `
+    <tr>
+      <td>#${r.reg_id || r.id}</td>
+      <td style="font-weight: bold; color: var(--gemini-purple);">${r.usn}</td>
+      <td>${r.name}</td>
+      <td>${r.college_name || '-'}</td>
+      <td>${r.year_of_study || '-'}</td>
+      <td>${r.branch_major || '-'}</td>
+      <td>${r.state || '-'}</td>
+      <td>${r.city || '-'}</td>
+      <td>${r.nano_banana_link ? `<a href="${r.nano_banana_link}" target="_blank">Link</a>` : '-'}</td>
+      <td>${new Date(r.submitted_at + 'Z').toLocaleString()}</td>
+      <td>
+        ${!r.is_deleted ? 
+          `<button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-red); color: var(--gemini-red);" onclick="deleteFeedback(${r.id})">Delete</button>` :
+          `<div style="display: flex; flex-direction: column; gap: 5px;">
+            <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-green); color: var(--gemini-green);" onclick="restoreFeedback(${r.id})">Restore</button>
+            <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: red; color: red;" onclick="permanentDeleteFeedback(${r.id})">Perm Delete</button>
+          </div>`
+        }
+      </td>
+    </tr>
+  `).join('');
+};
+
+const fetchFeedback = async () => {
+  const fbTableBody = document.getElementById('fbTableBody');
+  if (fbTableBody) fbTableBody.innerHTML = '<tr><td colspan="12" style="text-align: center;">Loading feedback...</td></tr>';
   try {
     const token = localStorage.getItem('arToken');
     const res = await fetch('/api/ar/feedback', {
@@ -192,32 +260,47 @@ const fetchFeedback = async () => {
     });
     const data = await res.json();
     if (data.success) {
-      fbCount.textContent = data.data.length;
-      if (data.data.length === 0) {
-        fbTableBody.innerHTML = '<tr><td colspan="13" style="text-align: center;">No feedback found for your registrations.</td></tr>';
-      } else {
-        fbTableBody.innerHTML = data.data.map(r => `
-          <tr>
-            <td>#${r.id}</td>
-            <td style="font-weight: bold; color: var(--gemini-purple);">${r.usn}</td>
-            <td>${r.name}</td>
-            <td>${r.college_name || '-'}</td>
-            <td>${r.college_url ? `<a href="${r.college_url}" target="_blank">Link</a>` : '-'}</td>
-            <td>${r.year_of_study || '-'}</td>
-            <td>${r.branch_major || '-'}</td>
-            <td>${r.state || '-'}</td>
-            <td>${r.city || '-'}</td>
-            <td>${r.gmail_address || '-'}</td>
-            <td>${r.phone_number || '-'}</td>
-            <td>${r.nano_banana_link ? `<a href="${r.nano_banana_link}" target="_blank">Link</a>` : '-'}</td>
-            <td>${new Date(r.submitted_at + 'Z').toLocaleString()}</td>
-          </tr>
-        `).join('');
-      }
+      allFeedback = data.data;
+      renderFeedback();
     }
   } catch (err) {
-    fbTableBody.innerHTML = '<tr><td colspan="13" style="text-align: center; color: red;">Failed to load feedback</td></tr>';
+    if (fbTableBody) fbTableBody.innerHTML = '<tr><td colspan="12" style="text-align: center; color: red;">Failed to load feedback</td></tr>';
   }
+};
+
+window.deleteFeedback = async (id) => {
+  if(!confirm('Move this feedback to the recycle bin?')) return;
+  try {
+    const token = localStorage.getItem('arToken');
+    const res = await fetch(\`/api/ar/feedback/\${id}/delete\`, {
+      method: 'PUT',
+      headers: { 'Authorization': \`Bearer \${token}\` }
+    });
+    if(res.ok) fetchFeedback();
+  } catch(e) {}
+};
+
+window.restoreFeedback = async (id) => {
+  try {
+    const token = localStorage.getItem('arToken');
+    const res = await fetch(\`/api/ar/feedback/\${id}/restore\`, {
+      method: 'PUT',
+      headers: { 'Authorization': \`Bearer \${token}\` }
+    });
+    if(res.ok) fetchFeedback();
+  } catch(e) {}
+};
+
+window.permanentDeleteFeedback = async (id) => {
+  if(!confirm('Permanently delete this feedback? This cannot be undone.')) return;
+  try {
+    const token = localStorage.getItem('arToken');
+    const res = await fetch(\`/api/ar/feedback/\${id}\`, {
+      method: 'DELETE',
+      headers: { 'Authorization': \`Bearer \${token}\` }
+    });
+    if(res.ok) fetchFeedback();
+  } catch(e) {}
 };
 
 const renderTable = (rows) => {
@@ -233,7 +316,7 @@ const renderTable = (rows) => {
     
     return `
     <tr>
-      <td>#${r.id}</td>
+      <td>#${r.reg_id || r.id}</td>
       <td style="font-weight: 600;">${r.usn}</td>
       <td>${r.name}</td>
       <td>
