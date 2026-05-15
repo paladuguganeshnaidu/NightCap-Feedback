@@ -272,9 +272,9 @@ window.deleteFeedback = async (id) => {
   if(!confirm('Move this feedback to the recycle bin?')) return;
   try {
     const token = localStorage.getItem('arToken');
-    const res = await fetch(\`/api/ar/feedback/\${id}/delete\`, {
+    const res = await fetch(`/api/ar/feedback/${id}/delete`, {
       method: 'PUT',
-      headers: { 'Authorization': \`Bearer \${token}\` }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
     if(res.ok) fetchFeedback();
   } catch(e) {}
@@ -283,9 +283,9 @@ window.deleteFeedback = async (id) => {
 window.restoreFeedback = async (id) => {
   try {
     const token = localStorage.getItem('arToken');
-    const res = await fetch(\`/api/ar/feedback/\${id}/restore\`, {
+    const res = await fetch(`/api/ar/feedback/${id}/restore`, {
       method: 'PUT',
-      headers: { 'Authorization': \`Bearer \${token}\` }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
     if(res.ok) fetchFeedback();
   } catch(e) {}
@@ -295,9 +295,9 @@ window.permanentDeleteFeedback = async (id) => {
   if(!confirm('Permanently delete this feedback? This cannot be undone.')) return;
   try {
     const token = localStorage.getItem('arToken');
-    const res = await fetch(\`/api/ar/feedback/\${id}\`, {
+    const res = await fetch(`/api/ar/feedback/${id}`, {
       method: 'DELETE',
-      headers: { 'Authorization': \`Bearer \${token}\` }
+      headers: { 'Authorization': `Bearer ${token}` }
     });
     if(res.ok) fetchFeedback();
   } catch(e) {}
