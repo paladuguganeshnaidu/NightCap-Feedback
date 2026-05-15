@@ -794,7 +794,7 @@ td {
   position: absolute;
   width: 60px;
   height: 60px;
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.9); /* white cube for dark theme */
   border: 1px solid var(--border-color);
   backdrop-filter: blur(4px);
   display: flex;
@@ -846,11 +846,20 @@ td {
   font-family: 'Outfit', sans-serif;
   font-weight: 800;
   font-size: 1.5rem;
-  color: white;
-  text-shadow: 0 0 5px rgba(0,0,0,0.8), 0 0 10px var(--gemini-purple);
+  color: black;
+  text-shadow: 0 0 5px rgba(255,255,255,0.8);
   z-index: 2;
 }
 @media (max-width: 768px) {
   .cube-count { font-size: 1rem; }
+}
+
+
+[data-theme="light"] .cube-face {
+  background: rgba(20, 20, 35, 0.9);
+}
+[data-theme="light"] .cube-count {
+  color: white;
+  text-shadow: 0 0 5px rgba(0,0,0,0.8), 0 0 10px var(--gemini-purple);
 }
 
