@@ -353,7 +353,7 @@ app.get('/api/public/preview-gsa', async (req, res) => {
       GROUP BY a.id
       ORDER BY a.id ASC
     `, [lang]);
-    let minCount = 31;
+    let minCount = Infinity;
     let assignedName = null;
     for (const admin of adminList) {
       const count = parseInt(admin.current_count);
@@ -409,7 +409,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
         WHERE a.gid = $1 AND a.is_active = TRUE 
         GROUP BY a.id
       `, [adminChoice]);
-      let minCount = 31;
+      let minCount = Infinity;
       for (const admin of adminList) {
         const count = parseInt(admin.current_count);
         if (count < admin.max_count && count < minCount) {
@@ -432,7 +432,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
         GROUP BY a.id
         ORDER BY a.id ASC
       `, [languageChoice]);
-      let minCount = 31;
+      let minCount = Infinity;
       for (const admin of adminList) {
         const count = parseInt(admin.current_count);
         if (count < admin.max_count && count < minCount) {
