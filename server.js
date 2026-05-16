@@ -667,7 +667,13 @@ app.get('/api/admins', async (req, res) => {
 // --- SUPER ADMIN ROUTES ---
 app.get('/api/super/admins', authenticateToken, async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM admins ORDER BY id ASC');
+    const { rows } = await pool.query(`
+      SELECT a.*, COUNT(r.id) as current_count
+      FROM admins a
+      LEFT JOIN registrations r ON a.gid = r.admin_gid
+      GROUP BY a.id
+      ORDER BY a.id ASC
+    `);
     res.json({ success: true, data: rows });
   } catch(e) { res.status(500).json({ success: false }); }
 });

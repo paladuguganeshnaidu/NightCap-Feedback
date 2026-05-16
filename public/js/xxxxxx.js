@@ -130,13 +130,13 @@ const fetchAdmins = async () => {
       renderTable();
     }
   } catch (e) {
-    tableBody.innerHTML = '<tr><td colspan="6">Failed to load data</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="10">Failed to load data</td></tr>';
   }
 };
 
 const renderTable = () => {
   if (adminsList.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No admins found.</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No admins found.</td></tr>';
     return;
   }
   tableBody.innerHTML = adminsList.map(a => `
@@ -146,6 +146,7 @@ const renderTable = () => {
       <td>${a.name}</td>
       <td>${a.password}</td>
       <td>${a.max_count}</td>
+      <td style="font-weight: bold; color: ${parseInt(a.current_count) >= a.max_count ? 'var(--gemini-red)' : 'var(--gemini-green)'};">${a.current_count}</td>
       <td>${a.language || 'English'}</td>
       <td>
         <span style="color: ${a.is_active !== false ? 'var(--gemini-green)' : 'var(--gemini-red)'}; font-weight: bold;">
