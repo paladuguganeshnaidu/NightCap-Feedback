@@ -55,6 +55,7 @@ const showDashboard = () => {
   logoutBtn.style.display = 'block';
   fetchConfig();
   fetchAdmins();
+  fetchAllRegistrations();
 };
 
 loginForm.addEventListener('submit', async (e) => {
@@ -277,4 +278,81 @@ if (clearRegistrationsBtn) {
       setTimeout(() => dataMsg.style.display = 'none', 4000);
     } catch(e) {}
   });
+}
+
+// All Registrations grouping logic
+const allRegistrationsContainer = document.getElementById('allRegistrationsContainer');
+const refreshRegsBtn = document.getElementById('refreshRegsBtn');
+
+const fetchAllRegistrations = async () => {
+  const token = localStorage.getItem('superToken');
+  try {
+    if (allRegistrationsContainer) allRegistrationsContainer.innerHTML = '<p style="text-align: center;">Loading registrations...</p>';
+    const res = await fetch('/api/super/all-registrations', { headers: { 'Authorization': `Bearer ${token}` }});
+    const data = await res.json();
+    if (data.success) {
+      renderAllRegistrations(data.data);
+    } else {
+      if (allRegistrationsContainer) allRegistrationsContainer.innerHTML = '<p style="color: var(--gemini-red); text-align: center;">Failed to load registrations.</p>';
+    }
+  } catch(e) {
+    if (allRegistrationsContainer) allRegistrationsContainer.innerHTML = '<p style="color: var(--gemini-red); text-align: center;">Error loading registrations.</p>';
+  }
+};
+
+const renderAllRegistrations = (registrations) => {
+  if (!allRegistrationsContainer) return;
+  if (registrations.length === 0) {
+    allRegistrationsContainer.innerHTML = '<p style="text-align: center;">No registrations found yet.</p>';
+    return;
+  }
+
+  // Group by admin_gid
+  const grouped = {};
+  registrations.forEach(r => {
+    const key = r.admin_name ? `${r.admin_name} (${r.admin_gid})` : `GSA ${r.admin_gid}`;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(r);
+  });
+
+  let html = '';
+  for (const [gsa, regs] of Object.entries(grouped)) {
+    html += `
+      <div style="margin-top: 1.5rem; background: rgba(0,0,0,0.02); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color);">
+        <h3 style="color: var(--gemini-purple); margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">${gsa} <span style="font-size: 0.9rem; color: var(--text-color); opacity: 0.7;">(${regs.length} registrations)</span></h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Reg ID</th>
+                <th>Name</th>
+                <th>USN</th>
+                <th>Dept</th>
+                <th>Mobile</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${regs.map(r => `
+                <tr>
+                  <td style="font-weight: bold;">${r.reg_id}</td>
+                  <td>${r.name}</td>
+                  <td>${r.usn}</td>
+                  <td>${r.department}</td>
+                  <td>${r.mobile}</td>
+                  <td>${r.email}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  allRegistrationsContainer.innerHTML = html;
+};
+
+if (refreshRegsBtn) {
+  refreshRegsBtn.addEventListener('click', fetchAllRegistrations);
 }

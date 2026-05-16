@@ -678,6 +678,18 @@ app.get('/api/super/admins', authenticateToken, async (req, res) => {
   } catch(e) { res.status(500).json({ success: false }); }
 });
 
+app.get('/api/super/all-registrations', authenticateToken, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT r.*, a.name as admin_name 
+      FROM registrations r 
+      LEFT JOIN admins a ON r.admin_gid = a.gid 
+      ORDER BY a.name ASC, r.created_at ASC
+    `);
+    res.json({ success: true, data: rows });
+  } catch(e) { res.status(500).json({ success: false }); }
+});
+
 app.post('/api/super/admins', authenticateToken, async (req, res) => {
   const { gid, name, password, max_count, language, is_active } = req.body;
   const active = is_active !== undefined ? is_active : true;
