@@ -341,6 +341,35 @@ app.get('/api/public/registration-count', async (req, res) => {
   }
 });
 
+app.get('/api/public/preview-gsa', async (req, res) => {
+  const { lang } = req.query;
+  if (!lang) return res.json({ success: false });
+  try {
+    const { rows: adminList } = await pool.query(`
+      SELECT a.name, a.max_count, COUNT(r.id) as current_count 
+      FROM admins a 
+      LEFT JOIN registrations r ON a.gid = r.admin_gid 
+      WHERE a.language = $1 AND a.is_active = TRUE 
+      GROUP BY a.id
+      ORDER BY a.id ASC
+    `, [lang]);
+    let minCount = 31;
+    let assignedName = null;
+    for (const admin of adminList) {
+      const count = parseInt(admin.current_count);
+      if (count < admin.max_count && count < minCount) {
+        minCount = count;
+        assignedName = admin.name;
+      }
+    }
+    if (assignedName) {
+      res.json({ success: true, name: assignedName });
+    } else {
+      res.json({ success: false, message: 'No slots available for this language.' });
+    }
+  } catch(e) { res.json({ success: false }); }
+});
+
 // --- REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, async (req, res) => {
   let { usn, name, mobile, email, adminChoice, languageChoice } = req.body;

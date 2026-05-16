@@ -229,8 +229,8 @@ const createConfetti = () => {
 const showSuccess = (data) => {
   formContainer.style.display = 'none';
   successState.classList.add('show');
-  document.getElementById('successMessage').textContent = 'Added to waiting list';
-  assignedAdminText.innerHTML = `We will get back soon.<br><span style="font-size: 0.9rem; opacity: 0.8; font-weight: normal;">Check confirmation mail in inbox & spam</span>`;
+  document.getElementById('successMessage').textContent = 'Registration Successful!';
+  assignedAdminText.innerHTML = `<span style="color: var(--gemini-purple); font-weight: bold; font-size: 1.1rem;">${data.message.replace('Successfully registered! ', '')}</span><br><br>We will get back soon.<br><span style="font-size: 0.9rem; opacity: 0.8; font-weight: normal;">Check confirmation mail in inbox & spam</span>`;
   
   createConfetti();
 };
@@ -298,4 +298,27 @@ form.addEventListener('submit', async (e) => {
     btnSpinner.style.display = 'none';
   }
 });
+
+
+const languageChoiceSelectNode = document.getElementById('languageChoice');
+if (languageChoiceSelectNode) {
+  languageChoiceSelectNode.addEventListener('change', async (e) => {
+    const lang = e.target.value;
+    const gsaNameDisplay = document.getElementById('gsaNameDisplay');
+    if (!gsaNameDisplay || !lang) return;
+    try {
+      const res = await fetch('/api/public/preview-gsa?lang=' + encodeURIComponent(lang));
+      const data = await res.json();
+      if (data.success) {
+        gsaNameDisplay.textContent = 'Assigned to GSA: ' + data.name;
+        gsaNameDisplay.style.color = 'var(--gemini-green)';
+      } else {
+        gsaNameDisplay.textContent = 'Sorry, slots are full for this language.';
+        gsaNameDisplay.style.color = 'var(--gemini-red)';
+      }
+    } catch(err) {
+      gsaNameDisplay.textContent = '';
+    }
+  });
+}
 
