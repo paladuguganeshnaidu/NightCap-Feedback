@@ -684,7 +684,7 @@ app.get('/api/super/all-registrations', authenticateToken, async (req, res) => {
       SELECT r.*, a.name as admin_name 
       FROM registrations r 
       LEFT JOIN admins a ON r.admin_gid = a.gid 
-      ORDER BY a.name ASC, r.registered_at ASC
+      ORDER BY a.name ASC, r.id ASC
     `);
     res.json({ success: true, data: rows });
   } catch(e) { res.status(500).json({ success: false }); }
