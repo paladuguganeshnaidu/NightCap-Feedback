@@ -63,6 +63,7 @@ const loadAdmins = async () => {
         document.getElementById('registrationForm').appendChild(hiddenAdmin);
         
         languageChoiceSelect.closest('.input-group').style.display = 'none'; // hide language
+        languageChoiceSelect.removeAttribute('required'); // Prevent HTML5 validation from blocking hidden select
         
         const gsaNameDisplay = document.getElementById('gsaNameDisplay');
         if (gsaNameDisplay) {
