@@ -583,10 +583,15 @@ if (postForm) {
         body: formData
       });
       
-      const data = await res.json();
+      let data;
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      }
+      
       postMsg.style.display = 'block';
       
-      if (res.ok && data.success) {
+      if (res.ok && data && data.success) {
         postMsg.style.color = 'var(--gemini-green)';
         postMsg.textContent = 'Post published successfully!';
         postForm.reset();
@@ -595,12 +600,16 @@ if (postForm) {
         fetchGsaPosts(); // Reload posts
       } else {
         postMsg.style.color = 'var(--gemini-red)';
-        postMsg.textContent = data.message || 'Failed to publish post.';
+        if (res.status === 413) {
+          postMsg.textContent = 'Image file is too large (Max 2MB).';
+        } else {
+          postMsg.textContent = (data && data.message) || `Failed to publish post (Status ${res.status}).`;
+        }
       }
     } catch (err) {
       postMsg.style.display = 'block';
       postMsg.style.color = 'var(--gemini-red)';
-      postMsg.textContent = 'Network error while publishing post.';
+      postMsg.textContent = 'Connection error while publishing post. Please check the file size and try again.';
     } finally {
       submitBtn.disabled = false;
       if (postSpinner) postSpinner.style.display = 'none';

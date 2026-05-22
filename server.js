@@ -14,6 +14,7 @@ const multer = require('multer');
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretgeminikey';
