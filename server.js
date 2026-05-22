@@ -87,17 +87,30 @@ const initDB = async () => {
     await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS redirect_url TEXT;`);
     await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`);
     await pool.query(`ALTER TABLE registrations ADD COLUMN IF NOT EXISTS reg_id TEXT UNIQUE;`);
-    // Seed admins if empty
-    const { rows: countRows } = await pool.query('SELECT COUNT(*) as count FROM admins');
-    if (parseInt(countRows[0].count) === 0) {
-      const insertQuery = 'INSERT INTO admins (gid, name, password, max_count) VALUES ($1, $2, $3, $4)';
-      const defaultHash = await bcrypt.hash('admin', 10);
-      await pool.query(insertQuery, ['3082', 'Ganesh', defaultHash, 30]);
-      await pool.query(insertQuery, ['0000', 'Deekshitha R', defaultHash, 30]);
-      await pool.query(insertQuery, ['2633', 'Aadya', defaultHash, 30]);
-      await pool.query(insertQuery, ['2579', 'Amrutha gowri', defaultHash, 30]);
-      await pool.query(insertQuery, ['2634', 'Deekshitha G S', defaultHash, 30]);
-      console.log('Seeded admins to PostgreSQL DB.');
+    // Seed admins individually to ensure all 10 exist
+    const adminsToSeed = [
+      { gid: '3082', name: 'Ganesh Naidu', max_count: 30, language: 'English' },
+      { gid: '0000', name: 'Deekshitha R', max_count: 30, language: 'English' },
+      { gid: '2633', name: 'Aadya Sinha', max_count: 30, language: 'English' },
+      { gid: '2579', name: 'Amrutha Gowri U', max_count: 30, language: 'English' },
+      { gid: '2634', name: 'Deekshitha G S', max_count: 30, language: 'English' },
+      { gid: '2635', name: 'Siva Sankar Raju', max_count: 30, language: 'English' },
+      { gid: '2636', name: 'Mohammadi Anjum', max_count: 30, language: 'English' },
+      { gid: '2637', name: 'C Monish Reddy', max_count: 30, language: 'English' },
+      { gid: '2638', name: 'Harsha', max_count: 30, language: 'English' },
+      { gid: '2639', name: 'Rishitha', max_count: 30, language: 'English' }
+    ];
+
+    const defaultHash = await bcrypt.hash('admin', 10);
+    for (const admin of adminsToSeed) {
+      const { rows } = await pool.query('SELECT 1 FROM admins WHERE gid = $1', [admin.gid]);
+      if (rows.length === 0) {
+        await pool.query(
+          'INSERT INTO admins (gid, name, password, max_count, language) VALUES ($1, $2, $3, $4, $5)',
+          [admin.gid, admin.name, defaultHash, admin.max_count, admin.language]
+        );
+        console.log(`Seeded missing admin: ${admin.name} (${admin.gid})`);
+      }
     }
   } catch (e) {
     console.error('DB Init Error', e);

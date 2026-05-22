@@ -333,6 +333,159 @@
     [data-theme="dark"] .social-icon {
       background: rgba(255,255,255,0.1);
     }
+
+    /* #Team Gemini GSA Showcase Styles */
+    .gsa-circle-section {
+      padding: 6rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .team-layout-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5rem;
+      margin-top: 3rem;
+    }
+    .leader-row {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+    .ambassadors-grid-3x3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3.5rem 2.5rem;
+      width: 100%;
+      max-width: 1050px;
+    }
+    .gsa-circle-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 2.5rem 2rem;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      box-shadow: 0 10px 30px var(--shadow-color);
+      position: relative;
+    }
+    .gsa-circle-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 35px var(--shadow-color), 0 0 25px var(--glow-color);
+      border-color: var(--glow-color);
+    }
+    .circle-avatar-wrapper {
+      width: 135px;
+      height: 135px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid var(--border-color);
+      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      box-shadow: 0 8px 20px var(--shadow-color);
+      margin-bottom: 1.5rem;
+      background: #101026;
+      position: relative;
+    }
+    .leader-card .circle-avatar-wrapper {
+      width: 175px;
+      height: 175px;
+      border-color: var(--gemini-blue);
+      box-shadow: 0 10px 30px rgba(66, 133, 244, 0.3);
+    }
+    .gsa-circle-card:hover .circle-avatar-wrapper {
+      border-color: var(--glow-color);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    .circle-avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+    .gsa-circle-card:hover .circle-avatar {
+      transform: scale(1.1);
+    }
+    .circle-gsa-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      color: var(--text-color);
+      letter-spacing: -0.3px;
+    }
+    .leader-card .circle-gsa-name {
+      font-size: 1.6rem;
+      background: linear-gradient(135deg, var(--text-color) 0%, var(--gemini-blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .circle-gsa-branch {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-color);
+      opacity: 0.65;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 1.8rem;
+    }
+    .circle-gsa-btn {
+      padding: 0.7rem 1.8rem;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .gsa-circle-card:hover .circle-gsa-btn {
+      background: var(--glow-color);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 5px 15px var(--glow-color);
+      transform: scale(1.05);
+    }
+    .circle-gsa-badge {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border-color);
+      padding: 0.3rem 0.7rem;
+      border-radius: 50px;
+      opacity: 0.8;
+    }
+
+    /* Responsiveness for small devices */
+    @media (max-width: 900px) {
+      .ambassadors-grid-3x3 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 600px) {
+      .ambassadors-grid-3x3 {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+      .circle-avatar-wrapper {
+        width: 120px;
+        height: 120px;
+      }
+      .leader-card .circle-avatar-wrapper {
+        width: 150px;
+        height: 150px;
+      }
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
@@ -422,6 +575,131 @@
           <div class="feature-icon">🤝</div>
           <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Global Network</h3>
           <p style="opacity: 0.8; line-height: 1.6;">Join a powerful alumni network of developers, engineers, and future tech leaders across the globe.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- #Team Gemini GSA Showcase Section -->
+    <section class="gsa-circle-section reveal">
+      <div class="section-header">
+        <h2 class="section-title">#Team Gemini</h2>
+        <p style="color: var(--text-color); opacity: 0.8; max-width: 600px; margin: 0 auto;">Innovate. Inspire. Lead. Building the future together.</p>
+      </div>
+
+      <div class="team-layout-container">
+        <!-- Lead GSA: Ganesh Naidu -->
+        <div class="leader-row">
+          <div class="gsa-circle-card leader-card" style="--glow-color: var(--gemini-blue)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-blue); color: var(--gemini-blue);">Lead GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/ganesh.png" alt="Ganesh Naidu">
+            </div>
+            <h3 class="circle-gsa-name">GANESH NAIDU</h3>
+            <span class="circle-gsa-branch">CSE | GSA Lead</span>
+            <a href="/register?gsa=3082" class="circle-gsa-btn">Register with Ganesh</a>
+          </div>
+        </div>
+
+        <!-- 3x3 Grid for remaining 9 Ambassadors -->
+        <div class="ambassadors-grid-3x3">
+          <!-- Card 1: Deekshita R -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-purple)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-purple); color: var(--gemini-purple);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/deeee.png" alt="Deekshita R">
+            </div>
+            <h3 class="circle-gsa-name">DEEKSHITA R</h3>
+            <span class="circle-gsa-branch">CSE</span>
+            <a href="/register?gsa=0000" class="circle-gsa-btn">Register with Deekshita</a>
+          </div>
+
+          <!-- Card 2: Aadya Sinha -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-green)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-green); color: var(--gemini-green);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/aadya.png" alt="Aadya Sinha">
+            </div>
+            <h3 class="circle-gsa-name">AADYA SINHA</h3>
+            <span class="circle-gsa-branch">CSE</span>
+            <a href="/register?gsa=2633" class="circle-gsa-btn">Register with Aadya</a>
+          </div>
+
+          <!-- Card 3: Siva Sankar Raju -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-yellow)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-yellow); color: var(--gemini-yellow);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/shiva.png" alt="Siva Sankar Raju">
+            </div>
+            <h3 class="circle-gsa-name">SIVA SANKAR RAJU</h3>
+            <span class="circle-gsa-branch">AIML</span>
+            <a href="/register?gsa=2635" class="circle-gsa-btn">Register with Siva</a>
+          </div>
+
+          <!-- Card 4: Deekshitha G S -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-red)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-red); color: var(--gemini-red);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/deekshithags.png" alt="Deekshitha G S">
+            </div>
+            <h3 class="circle-gsa-name">DEEKSHITHA G S</h3>
+            <span class="circle-gsa-branch">CSE</span>
+            <a href="/register?gsa=2634" class="circle-gsa-btn">Register with Deekshitha</a>
+          </div>
+
+          <!-- Card 5: Mohammadi Anjum -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-blue)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-blue); color: var(--gemini-blue);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/anju.png" alt="Mohammadi Anjum">
+            </div>
+            <h3 class="circle-gsa-name">MOHAMMADI ANJUM</h3>
+            <span class="circle-gsa-branch">CSE</span>
+            <a href="/register?gsa=2636" class="circle-gsa-btn">Register with Anjum</a>
+          </div>
+
+          <!-- Card 6: C Monish Reddy -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-purple)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-purple); color: var(--gemini-purple);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/mounish.png" alt="C Monish Reddy">
+            </div>
+            <h3 class="circle-gsa-name">C MONISH REDDY</h3>
+            <span class="circle-gsa-branch">AIML</span>
+            <a href="/register?gsa=2637" class="circle-gsa-btn">Register with Monish</a>
+          </div>
+
+          <!-- Card 7: Harsha -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-green)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-green); color: var(--gemini-green);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/harsha.png" alt="Harsha">
+            </div>
+            <h3 class="circle-gsa-name">HARSHA</h3>
+            <span class="circle-gsa-branch">AIML</span>
+            <a href="/register?gsa=2638" class="circle-gsa-btn">Register with Harsha</a>
+          </div>
+
+          <!-- Card 8: Amrutha Gowri U -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-yellow)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-yellow); color: var(--gemini-yellow);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/amrutha.png" alt="Amrutha Gowri U">
+            </div>
+            <h3 class="circle-gsa-name">AMRUTHA GOWRI U</h3>
+            <span class="circle-gsa-branch">CSE</span>
+            <a href="/register?gsa=2579" class="circle-gsa-btn">Register with Amrutha</a>
+          </div>
+
+          <!-- Card 9: Rishitha -->
+          <div class="gsa-circle-card" style="--glow-color: var(--gemini-red)">
+            <span class="circle-gsa-badge" style="border-color: var(--gemini-red); color: var(--gemini-red);">GSA</span>
+            <div class="circle-avatar-wrapper">
+              <img class="circle-avatar" src="/images/gsas/rishitha.png" alt="Rishitha">
+            </div>
+            <h3 class="circle-gsa-name">RISHITHA</h3>
+            <span class="circle-gsa-branch">AIML</span>
+            <a href="/register?gsa=2639" class="circle-gsa-btn">Register with Rishitha</a>
+          </div>
         </div>
       </div>
     </section>
