@@ -8,6 +8,8 @@ const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const xss = require('xss');
+const fs = require('fs');
+const multer = require('multer');
 
 dotenv.config();
 
@@ -71,6 +73,14 @@ const initDB = async () => {
         id SERIAL PRIMARY KEY,
         action TEXT NOT NULL,
         details TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS posts (
+        id SERIAL PRIMARY KEY,
+        caption TEXT NOT NULL,
+        image_path TEXT NOT NULL,
+        admin_gid TEXT NOT NULL REFERENCES admins(gid) ON DELETE CASCADE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -158,6 +168,44 @@ app.use(async (req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+
+// Ensure upload and backup directories exist
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+const backupDir = path.join(__dirname, 'backups', 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+if (!fs.existsSync(backupDir)) {
+  fs.mkdirSync(backupDir, { recursive: true });
+}
+
+// Multer setup for secure photo uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, 'post-' + uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedExts = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
+    
+    if (allowedExts.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images (.png, .jpg, .jpeg, .webp, .gif) are allowed!'));
+    }
+  }
+});
 
 const submitLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -664,6 +712,126 @@ app.put('/api/ar/registration/:id', authenticateARToken, async (req, res) => {
     res.json({ success: true, message: 'Registration updated successfully' });
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ success: false, message: "This USN is already registered." });
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+// --- GSA POSTS ROUTES ---
+
+app.post('/api/posts', authenticateARToken, (req, res) => {
+  upload.single('image')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image uploaded' });
+    }
+    
+    let caption = req.body.caption || '';
+    caption = xss(caption).trim();
+    
+    if (!caption) {
+      // Delete the uploaded file if validation fails
+      try { fs.unlinkSync(req.file.path); } catch(e) {}
+      return res.status(400).json({ success: false, message: 'Caption is required' });
+    }
+    
+    const filename = req.file.filename;
+    const relativePath = '/uploads/' + filename;
+    const finalBackupPath = path.join(backupDir, filename);
+    
+    try {
+      // Copy file to secure backups directory immediately (VPS filesystem backup)
+      fs.copyFileSync(req.file.path, finalBackupPath);
+      
+      // Insert post into database
+      const query = 'INSERT INTO posts (caption, image_path, admin_gid) VALUES ($1, $2, $3) RETURNING *';
+      const { rows } = await pool.query(query, [caption, relativePath, req.user.gid]);
+      
+      logAction('Create Post', `AR Admin ${req.user.name} (${req.user.gid}) created post ID ${rows[0].id}`);
+      res.json({ success: true, message: 'Post uploaded successfully', data: rows[0] });
+    } catch (dbErr) {
+      console.error('Post creation database error:', dbErr);
+      // Cleanup local files on failure
+      try { fs.unlinkSync(req.file.path); } catch(e) {}
+      try { fs.unlinkSync(finalBackupPath); } catch(e) {}
+      res.status(500).json({ success: false, message: 'Database error while saving post.' });
+    }
+  });
+});
+
+app.get('/api/posts', async (req, res) => {
+  try {
+    const query = `
+      SELECT p.id, p.caption, p.image_path, p.created_at, a.name as author_name, a.language
+      FROM posts p
+      JOIN admins a ON p.admin_gid = a.gid
+      ORDER BY p.created_at DESC
+    `;
+    const { rows } = await pool.query(query);
+    
+    // Self-healing check (restoration from backup if missing in public uploads)
+    for (const post of rows) {
+      const filename = path.basename(post.image_path);
+      const publicPath = path.join(uploadDir, filename);
+      const backupPath = path.join(backupDir, filename);
+      
+      if (!fs.existsSync(publicPath) && fs.existsSync(backupPath)) {
+        try {
+          fs.copyFileSync(backupPath, publicPath);
+          console.log(`[Self-Healing] Restored missing file from backup: ${filename}`);
+        } catch (restoreErr) {
+          console.error(`[Self-Healing] Failed to restore file ${filename}:`, restoreErr);
+        }
+      }
+    }
+    
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error('Fetch posts error:', err);
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+app.get('/api/ar/posts', authenticateARToken, async (req, res) => {
+  try {
+    const query = 'SELECT * FROM posts WHERE admin_gid = $1 ORDER BY created_at DESC';
+    const { rows } = await pool.query(query, [req.user.gid]);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
+});
+
+app.delete('/api/posts/:id', authenticateARToken, async (req, res) => {
+  const postId = req.params.id;
+  try {
+    // Check ownership
+    const checkQuery = 'SELECT * FROM posts WHERE id = $1';
+    const { rows: checkRows } = await pool.query(checkQuery, [postId]);
+    if (checkRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found.' });
+    }
+    
+    const post = checkRows[0];
+    if (post.admin_gid !== req.user.gid) {
+      return res.status(403).json({ success: false, message: 'You can only delete your own posts.' });
+    }
+    
+    // Delete from database
+    await pool.query('DELETE FROM posts WHERE id = $1', [postId]);
+    
+    // Delete from public uploads
+    const filename = path.basename(post.image_path);
+    const publicPath = path.join(uploadDir, filename);
+    if (fs.existsSync(publicPath)) {
+      try { fs.unlinkSync(publicPath); } catch (e) {}
+    }
+    
+    logAction('Delete Post', `AR Admin ${req.user.name} (${req.user.gid}) deleted post ID ${postId}`);
+    res.json({ success: true, message: 'Post deleted successfully.' });
+  } catch (err) {
+    console.error('Delete post error:', err);
     res.status(500).json({ success: false, message: 'Database error.' });
   }
 });

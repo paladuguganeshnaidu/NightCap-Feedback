@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GSA Updates Feed | NCET Google Student Ambassadors</title>
+  <meta name="description" content="View live announcements, events coverage, and campus updates posted directly by the Google Student Ambassadors of NCET.">
+  <link rel="stylesheet" href="/css/style.css?v=6">
+  <style>
+    /* Animated Background */
+    .animated-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      overflow: hidden;
+      z-index: -1;
+      background: var(--bg-color);
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 20s infinite ease-in-out alternate;
+    }
+    .orb-1 { width: 400px; height: 400px; background: rgba(66, 133, 244, 0.3); top: -10%; left: -10%; }
+    .orb-2 { width: 500px; height: 500px; background: rgba(155, 114, 203, 0.3); bottom: -20%; right: -10%; animation-delay: -5s; }
+    .orb-3 { width: 350px; height: 350px; background: rgba(52, 168, 83, 0.25); top: 30%; left: 40%; animation-delay: -10s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(50px, 30px) scale(1.05); }
+      100% { transform: translate(-30px, 60px) scale(0.95); }
+    }
+
+    /* Hero Section */
+    .hero-section {
+      min-height: 35vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+      position: relative;
+    }
+
+    .hero-badge {
+      background: rgba(66, 133, 244, 0.1);
+      border: 1px solid rgba(66, 133, 244, 0.3);
+      color: #4285F4;
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      animation: slideDown 0.8s ease-out forwards;
+    }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      line-height: 1.1;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--gemini-blue) 0%, var(--gemini-purple) 50%, var(--gemini-green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 5s ease infinite;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      max-width: 600px;
+      opacity: 0.8;
+      margin-bottom: 2rem;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    /* Posts Container */
+    .posts-section {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+      box-sizing: border-box;
+    }
+
+    /* 4-column Grid Layout */
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      width: 100%;
+    }
+
+    /* Post Card Styling (Official Google Premium Look) */
+    .post-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 30px var(--shadow-color);
+      transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+      position: relative;
+    }
+
+    /* Accent top bar based on Google Colors */
+    .post-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--accent-color, var(--gemini-blue));
+      z-index: 2;
+    }
+
+    .post-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 35px var(--shadow-color), 0 0 20px rgba(66, 133, 244, 0.15);
+      border-color: var(--accent-color, var(--gemini-blue));
+    }
+
+    /* Image Wrapper */
+    .post-image-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 60%; /* 5:3 Aspect Ratio */
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .post-image {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .post-card:hover .post-image {
+      transform: scale(1.08);
+    }
+
+    /* Content Area */
+    .post-content {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+    }
+
+    .post-caption {
+      font-size: 0.98rem;
+      line-height: 1.6;
+      color: var(--text-color);
+      margin-bottom: 1.5rem;
+      white-space: pre-wrap;
+      flex-grow: 1;
+      opacity: 0.95;
+    }
+
+    /* Author Footer info */
+    .post-footer {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: auto;
+    }
+
+    [data-theme="light"] .post-footer {
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .author-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-color);
+      box-shadow: 0 2px 8px var(--shadow-color);
+    }
+
+    .author-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .author-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .post-meta {
+      font-size: 0.78rem;
+      opacity: 0.6;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Branch/Language badge */
+    .meta-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--accent-color-transparent, rgba(66, 133, 244, 0.15));
+      color: var(--accent-color, var(--gemini-blue));
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Loading Shimmer State */
+    .shimmer-card {
+      height: 380px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .shimmer-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    [data-theme="light"] .shimmer-card::after {
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.03), transparent);
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 5rem 2rem;
+      grid-column: 1 / -1;
+      color: var(--text-color);
+      opacity: 0.8;
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 1.5rem;
+      opacity: 0.6;
+    }
+
+    /* Responsiveness */
+    @media (max-width: 1200px) {
+      .posts-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .posts-grid {
+        grid-template-columns: 1fr;
+      }
+      .posts-section {
+        padding: 0 1rem 3rem;
+      }
+      .hero-section {
+        padding-top: 3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Animated Blobs -->
+  <div class="animated-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <a href="/" class="logo-container">
+      <svg class="gemini-sparkle" viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="gemini-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#4285F4" />
+            <stop offset="100%" stop-color="#9b72cb" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#gemini-grad)" d="M12 0l2.5 9.5L24 12l-9.5 2.5L12 24l-2.5-9.5L0 12l9.5-2.5z" />
+      </svg>
+      <h1 class="title">GSA Hub</h1>
+    </a>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌓</button>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Side Navigation Overlay -->
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="menu-links">
+      <a href="/">Home</a>
+      <a href="/posts" style="color: var(--gemini-blue);">Updates Feed</a>
+      <a href="/register">Event Registration</a>
+      <a href="/feedback">Submit Feedback</a>
+      <a href="/GSA">GSA Portal</a>
+    </div>
+  </div>
+
+  <main style="padding-top: 0;">
+    <!-- Hero Banner -->
+    <section class="hero-section">
+      <div class="hero-badge">Google Student Ambassadors Community</div>
+      <h2 class="hero-title">Live Updates & Stories</h2>
+      <p class="hero-subtitle">Discover the latest tech events, Gemini workshops, hackathons, and announcements published directly by your GSA representatives.</p>
+    </section>
+
+    <!-- Main Updates Gallery -->
+    <section class="posts-section">
+      <div class="posts-grid" id="postsGrid">
+        <!-- Shimmer loading states (4 items for row) -->
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>NCET Google Student Ambassadors &copy; <span id="year"></span></p>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+
+    themeToggle.addEventListener('click', () => {
+      let theme = document.documentElement.getAttribute('data-theme');
+      let newTheme = theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
+
+    // Profile Image Mapping based on GSA names
+    const getGsaAvatar = (name) => {
+      const mapping = {
+        'ganesh': 'ganesh.png',
+        'deekshitha r': 'deeee.png',
+        'aadya': 'aadya.png',
+        'amrutha': 'amrutha.png',
+        'deekshitha g': 'deekshithags.png',
+        'siva': 'shiva.png',
+        'anjum': 'anju.png',
+        'monish': 'mounish.png',
+        'harsha': 'harsha.png',
+        'rishitha': 'rishitha.png'
+      };
+      
+      const key = Object.keys(mapping).find(k => name.toLowerCase().includes(k));
+      return key ? `/images/gsas/${mapping[key]}` : '/images/gsas/Gemini Sparkle.png';
+    };
+
+    // Google color accents mapping
+    const getGoogleColors = (index) => {
+      const colors = [
+        { main: '#4285F4', bg: 'rgba(66, 133, 244, 0.12)' }, // Google Blue
+        { main: '#EA4335', bg: 'rgba(234, 67, 53, 0.12)' },  // Google Red
+        { main: '#FBBC05', bg: 'rgba(251, 188, 5, 0.12)' },   // Google Yellow
+        { main: '#34A853', bg: 'rgba(52, 168, 83, 0.12)' }    // Google Green
+      ];
+      return colors[index % 4];
+    };
+
+    // Time Formatter
+    const formatTime = (dateStr) => {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    // Fetch Posts from public API
+    const postsGrid = document.getElementById('postsGrid');
+
+    const loadPosts = async () => {
+      try {
+        const res = await fetch('/api/posts');
+        const data = await res.json();
+        
+        if (data.success && data.data.length > 0) {
+          postsGrid.innerHTML = data.data.map((post, index) => {
+            const colors = getGoogleColors(index);
+            const avatar = getGsaAvatar(post.author_name);
+            const relativeTime = formatTime(post.created_at);
+            
+            return `
+              <div class="post-card" style="--accent-color: ${colors.main}; --accent-color-transparent: ${colors.bg};">
+                <div class="post-image-wrapper">
+                  <img src="${post.image_path}" class="post-image" alt="GSA Post Image" loading="lazy" onerror="this.src='/images/gsas/Google Gemini Logo on White.png'">
+                </div>
+                <div class="post-content">
+                  <p class="post-caption">${post.caption}</p>
+                  <div class="post-footer">
+                    <img src="${avatar}" class="author-avatar" alt="${post.author_name}" onerror="this.src='/images/gsas/Gemini Sparkle.png'">
+                    <div class="author-details">
+                      <span class="author-name">${post.author_name}</span>
+                      <div class="post-meta">
+                        <span>${relativeTime}</span>
+                        <span class="meta-badge">${post.language || 'GSA'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          postsGrid.innerHTML = `
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <h3>No announcements yet</h3>
+              <p>Keep checking back! Our Google Student Ambassadors will post live updates here shortly.</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error('Failed to load posts:', err);
+        postsGrid.innerHTML = `
+          <div class="empty-state" style="color: var(--gemini-red);">
+            <h3>Connection Error</h3>
+            <p>Failed to retrieve the latest updates. Please refresh the page or try again later.</p>
+          </div>
+        `;
+      }
+    };
+
+    // Load posts on page load
+    setTimeout(loadPosts, 500); // Slight delay for beautiful loading presentation
+  </script>
+  <script src="/js/menu.js"></script>
+</body>
+</html>

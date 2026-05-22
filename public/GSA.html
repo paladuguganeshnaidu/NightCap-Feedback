@@ -36,6 +36,7 @@
   <div class="menu-overlay" id="menuOverlay">
     <div class="menu-links">
       <a href="/">Home</a>
+      <a href="/posts">Updates Feed</a>
       <a href="/register">Registration</a>
       <a href="/feedback">Feedback Form</a>
       <a href="/GSA">GSA Dashboard</a>
@@ -109,6 +110,43 @@
           <button type="submit" class="primary-btn" style="max-width: 250px;">Send Mail</button>
           <div id="mailMsg" style="margin-top: 0.5rem; font-weight: bold; display: none;"></div>
         </form>
+      </div>
+
+      <!-- Post Creation Section -->
+      <div class="admin-section glass">
+        <h2>Create a GSA Post</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-color); opacity: 0.8;">Post announcements or updates with an image and caption to the public updates feed.</p>
+        <form id="postForm" style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <div class="input-group" style="margin-bottom: 0;">
+            <label for="postImage">Select Image (Max 2MB, .png, .jpg, .jpeg, .webp, .gif)</label>
+            <input type="file" id="postImage" accept="image/*" required style="padding: 0.8rem; border-radius: 8px; border: 2px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color);">
+          </div>
+          
+          <!-- Image Preview Container -->
+          <div id="imagePreviewContainer" style="display: none; width: 100%; max-width: 300px; border-radius: 12px; overflow: hidden; border: 2px dashed var(--border-color); padding: 5px; box-sizing: border-box; background: rgba(0,0,0,0.1);">
+            <img id="imagePreview" src="" alt="Post Preview" style="width: 100%; height: auto; border-radius: 8px; display: block; object-fit: cover;">
+          </div>
+          
+          <div class="input-group" style="margin-bottom: 0;">
+            <label for="postCaption">Caption / Message</label>
+            <textarea id="postCaption" placeholder="Write your announcement or description here..." required style="width: 100%; max-width: 600px; height: 120px; padding: 1rem; border-radius: 12px; border: 2px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color); font-family: 'Inter', sans-serif; resize: vertical;"></textarea>
+          </div>
+          <button type="submit" class="primary-btn" style="max-width: 250px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <span>Publish Post</span>
+            <div class="spinner" id="postSpinner" style="display: none; margin-top: 0; width: 18px; height: 18px; border-width: 2px;"></div>
+          </button>
+          <div id="postMsg" style="margin-top: 0.5rem; font-weight: bold; display: none;"></div>
+        </form>
+      </div>
+
+      <!-- Manage GSA Posts -->
+      <div class="admin-section glass">
+        <h2>Your Published Posts</h2>
+        <p style="margin-bottom: 1.5rem; opacity: 0.8;">View and manage posts you have published to the updates feed.</p>
+        
+        <div id="gsaPostsList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; width: 100%;">
+          <div style="text-align: center; grid-column: 1/-1; opacity: 0.6; padding: 2rem 0;">Loading your posts...</div>
+        </div>
       </div>
 
       <!-- Data Section -->
