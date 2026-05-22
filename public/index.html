@@ -317,18 +317,42 @@
       justify-content: center;
       width: 100%;
     }
-    .gsa-grid-3x3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4.5rem 3rem;
+    .gsa-row-3 {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4.5rem 3.5rem;
+      width: 100%;
+      max-width: 750px;
+      margin: 0 auto;
+    }
+    .gsa-row-2 {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4.5rem 3.5rem;
+      width: 100%;
+      max-width: 550px;
+      margin: 0 auto;
+    }
+    .gsa-row-4 {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4.5rem 3.5rem;
       width: 100%;
       max-width: 950px;
+      margin: 0 auto;
     }
     .gsa-profile-item {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
+      width: 150px; /* Consistently sized columns for flex alignment */
+    }
+    .gsa-profile-item.gsa-lead {
+      width: 200px;
     }
     .gsa-avatar-link {
       display: block;
@@ -374,12 +398,13 @@
       transform: scale(1.06);
     }
     .gsa-profile-name {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 600;
       margin: 1.2rem 0 0.25rem 0;
       color: var(--text-color);
       letter-spacing: -0.2px;
       font-family: 'Outfit', sans-serif;
+      line-height: 1.3;
     }
     .gsa-profile-name a {
       color: inherit;
@@ -404,23 +429,24 @@
     
     /* Responsive styling */
     @media (max-width: 900px) {
-      .gsa-grid-3x3 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 4rem 2rem;
+      .gsa-row-3, .gsa-row-2, .gsa-row-4 {
+        gap: 3.5rem 2.5rem;
       }
     }
     @media (max-width: 600px) {
-      .gsa-grid-3x3 {
-        grid-template-columns: 1fr;
-        gap: 3.5rem;
+      .gsa-row-3, .gsa-row-2, .gsa-row-4 {
+        gap: 3rem 1.5rem;
+      }
+      .gsa-profile-item {
+        width: 130px;
       }
       .gsa-avatar-frame {
-        width: 120px;
-        height: 120px;
+        width: 110px;
+        height: 110px;
       }
       .gsa-profile-item.gsa-lead .gsa-avatar-frame {
-        width: 145px;
-        height: 145px;
+        width: 140px;
+        height: 140px;
       }
     }
   </style>
@@ -527,8 +553,8 @@
           </div>
         </div>
 
-        <!-- 3x3 Grid for remaining 9 Ambassadors -->
-        <div class="gsa-grid-3x3">
+        <!-- Row 1: 3 Google Student Ambassadors -->
+        <div class="gsa-row-3">
           <!-- Member 1: Deekshita R -->
           <div class="gsa-profile-item" style="--gsa-theme-color: var(--gemini-purple)">
             <a href="/register?gsa=0000" class="gsa-avatar-link" title="Register with Deekshita R">
@@ -561,7 +587,10 @@
             <h3 class="gsa-profile-name"><a href="/register?gsa=2635">SIVA SANKAR RAJU</a></h3>
             <span class="gsa-profile-branch">AIML</span>
           </div>
+        </div>
 
+        <!-- Row 2: 2 Google Student Ambassadors -->
+        <div class="gsa-row-2">
           <!-- Member 4: Deekshitha G S -->
           <div class="gsa-profile-item" style="--gsa-theme-color: var(--gemini-red)">
             <a href="/register?gsa=2634" class="gsa-avatar-link" title="Register with Deekshitha G S">
@@ -583,7 +612,10 @@
             <h3 class="gsa-profile-name"><a href="/register?gsa=2636">MOHAMMADI ANJUM</a></h3>
             <span class="gsa-profile-branch">CSE</span>
           </div>
+        </div>
 
+        <!-- Row 3: 4 Google Student Ambassadors -->
+        <div class="gsa-row-4">
           <!-- Member 6: C Monish Reddy -->
           <div class="gsa-profile-item" style="--gsa-theme-color: var(--gemini-purple)">
             <a href="/register?gsa=2637" class="gsa-avatar-link" title="Register with C Monish Reddy">
