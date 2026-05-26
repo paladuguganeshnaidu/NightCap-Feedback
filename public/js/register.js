@@ -82,7 +82,7 @@ const loadRegistrationCount = async () => {
 loadRegistrationCount();
 
 // Validation Regex
-const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
+const usnRegex = /^1NC\d{2}([A-Z]{2,3})\d{2,3}$/i;
 const nameRegex = /^[a-zA-Z\s\.]{1,100}$/;
 const mobileRegex = /^[0-9]{10}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -122,7 +122,7 @@ usnInput.addEventListener('input', (e) => {
     return;
   }
 
-  const match = val.match(/^1NC2[03456789]([A-Z]{2})/i);
+  const match = val.match(/^1NC\d{2}([A-Z]{2,3})/i);
   if (match) {
     branchTag.textContent = match[1].toUpperCase();
     branchTag.classList.add('show');

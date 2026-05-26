@@ -251,7 +251,7 @@ app.post('/api/submit', submitLimiter, async (req, res) => {
   city = city ? xss(city) : '';
   nano_banana_link = nano_banana_link ? xss(nano_banana_link) : '';
 
-  const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
+  const usnRegex = /^1NC\d{2}([A-Z]{2,3})\d{2,3}$/i;
   if (!usnRegex.test(usn.toUpperCase())) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
   const nameRegex = /^[a-zA-Z\s\.]{1,100}$/;
   if (!nameRegex.test(name)) return res.status(400).json({ success: false, message: 'Invalid Name format.' });
@@ -447,18 +447,20 @@ app.post('/api/register', submitLimiter, async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid email format.' });
   }
 
-  const usnRegex = /^1NC2[03456789]([A-Z]{2})\d{3}$/i;
+  const usnRegex = /^1NC\d{2}([A-Z]{2,3})\d{2,3}$/i;
   const match = usn.toUpperCase().match(usnRegex);
   if (!match) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
   const department = match[1].toUpperCase();
 
   try {
     const { rows: branchRows } = await pool.query("SELECT value FROM config WHERE key = 'allowed_branches'");
-    const allowedBranchesStr = branchRows.length > 0 ? branchRows[0].value : 'CS,CI,CD,IS,EC,EE,ME,CV';
-    const allowedBranches = allowedBranchesStr.split(',').map(b => b.trim().toUpperCase());
+    const allowedBranchesStr = branchRows.length > 0 ? branchRows[0].value.trim() : 'CS,CI,CD,IS,EC,EE,ME,CV';
     
-    if (!allowedBranches.includes(department)) {
-      return res.status(400).json({ success: false, message: `Registrations from branch ${department} are currently not allowed.` });
+    if (allowedBranchesStr !== '') {
+      const allowedBranches = allowedBranchesStr.split(',').map(b => b.trim().toUpperCase());
+      if (!allowedBranches.includes(department)) {
+        return res.status(400).json({ success: false, message: `Registrations from branch ${department} are currently not allowed.` });
+      }
     }
 
     let assignedGid = null;
