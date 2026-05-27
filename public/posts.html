@@ -131,19 +131,27 @@
       width: 100%;
       padding-top: 60%; /* 5:3 Aspect Ratio */
       overflow: hidden;
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.03);
       border-bottom: 1px solid var(--border-color);
+      cursor: zoom-in;
     }
 
     .post-image {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      object-fit: cover;
-      transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+      object-fit: contain; /* Prevents awkward cropping of flyers */
+      background: rgba(0, 0, 0, 0.25);
+      transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
 
     .post-card:hover .post-image {
-      transform: scale(1.08);
+      transform: scale(1.04);
+    }
+
+    /* Active hold zoom effect */
+    .post-image-wrapper:active .post-image {
+      transform: scale(1.8) !important;
+      z-index: 5;
     }
 
     /* Content Area */
@@ -348,6 +356,12 @@
     </section>
   </main>
 
+  <!-- Premium Lightbox Modal -->
+  <div id="lightboxModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: 10000; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: zoom-out;">
+    <button style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 44px; height: 44px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); transition: transform 0.2s ease;">&times;</button>
+    <img id="lightboxImage" src="" alt="Maximized Flyer" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); transform: scale(0.9); transition: transform 0.3s ease;">
+  </div>
+
   <footer>
     <p>NCET Google Student Ambassadors &copy; <span id="year"></span></p>
   </footer>
@@ -367,24 +381,71 @@
       localStorage.setItem('theme', newTheme);
     });
 
-    // Profile Image Mapping based on GSA names
-    const getGsaAvatar = (name) => {
-      if (!name) return '/images/gsas/Gemini Sparkle.png';
-      const mapping = {
-        'ganesh': 'ganesh.png',
-        'deekshitha r': 'deeee.png',
-        'aadya': 'aadya.png',
-        'amrutha': 'amrutha.png',
-        'deekshitha g': 'deekshithags.png',
-        'siva': 'shiva.png',
-        'anjum': 'anju.png',
-        'monish': 'mounish.png',
-        'harsha': 'harsha.png',
-        'rishitha': 'rishitha.png'
+    // Profile Image, Department & LinkedIn Mapping based on GSA names
+    const getGsaDetails = (name) => {
+      const defaultValue = {
+        avatar: '/images/gsas/Gemini Sparkle.png',
+        dept: 'GSA',
+        linkedin: 'https://www.linkedin.com/school/nagarjuna-college-of-engineering-&-technology/'
       };
-      
+
+      if (!name) return defaultValue;
+
+      const mapping = {
+        'ganesh': {
+          avatar: '/images/gsas/ganesh.png',
+          dept: 'CSE',
+          linkedin: 'https://www.linkedin.com/in/paladuguganeshnaidu/'
+        },
+        'deekshitha r': {
+          avatar: '/images/gsas/deeee.png',
+          dept: 'CSE',
+          linkedin: 'https://www.linkedin.com/in/deekshitha-r/'
+        },
+        'aadya': {
+          avatar: '/images/gsas/aadya.png',
+          dept: 'CSE',
+          linkedin: 'https://www.linkedin.com/in/aadya-sinha/'
+        },
+        'amrutha': {
+          avatar: '/images/gsas/amrutha.png',
+          dept: 'CSE',
+          linkedin: 'https://www.linkedin.com/in/amrutha-gowri/'
+        },
+        'deekshitha g': {
+          avatar: '/images/gsas/deekshithags.png',
+          dept: 'CSE',
+          linkedin: 'https://www.linkedin.com/in/deekshitha-g-s/'
+        },
+        'siva': {
+          avatar: '/images/gsas/shiva.png',
+          dept: 'AIML',
+          linkedin: 'https://www.linkedin.com/in/siva-sankar-raju/'
+        },
+        'anjum': {
+          avatar: '/images/gsas/anju.png',
+          dept: 'CSE',
+          linkedin: 'https://www.linkedin.com/in/mohammadi-anjum/'
+        },
+        'monish': {
+          avatar: '/images/gsas/mounish.png',
+          dept: 'AIML',
+          linkedin: 'https://www.linkedin.com/in/c-monish-reddy/'
+        },
+        'harsha': {
+          avatar: '/images/gsas/harsha.png',
+          dept: 'AIML',
+          linkedin: 'https://www.linkedin.com/in/harsha-aiml/'
+        },
+        'rishitha': {
+          avatar: '/images/gsas/rishitha.png',
+          dept: 'AIML',
+          linkedin: 'https://www.linkedin.com/in/rishitha-aiml/'
+        }
+      };
+
       const key = Object.keys(mapping).find(k => name.toLowerCase().includes(k));
-      return key ? `/images/gsas/${mapping[key]}` : '/images/gsas/Gemini Sparkle.png';
+      return key ? mapping[key] : defaultValue;
     };
 
     // Google color accents mapping
@@ -415,6 +476,42 @@
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     };
 
+    // Premium Lightbox Functions
+    window.openLightbox = (src) => {
+      const modal = document.getElementById('lightboxModal');
+      const img = document.getElementById('lightboxImage');
+      if (!modal || !img) return;
+      
+      img.src = src;
+      modal.style.display = 'flex';
+      
+      setTimeout(() => {
+        modal.style.opacity = '1';
+        img.style.transform = 'scale(1)';
+      }, 50);
+    };
+
+    window.closeLightbox = () => {
+      const modal = document.getElementById('lightboxModal');
+      const img = document.getElementById('lightboxImage');
+      if (!modal || !img) return;
+      
+      modal.style.opacity = '0';
+      img.style.transform = 'scale(0.9)';
+      
+      setTimeout(() => {
+        modal.style.display = 'none';
+        img.src = '';
+      }, 300);
+    };
+
+    const lightboxModal = document.getElementById('lightboxModal');
+    if (lightboxModal) {
+      lightboxModal.addEventListener('click', (e) => {
+        closeLightbox();
+      });
+    }
+
     // Fetch Posts from public API
     const postsGrid = document.getElementById('postsGrid');
 
@@ -426,23 +523,25 @@
         if (data.success && data.data.length > 0) {
           postsGrid.innerHTML = data.data.map((post, index) => {
             const colors = getGoogleColors(index);
-            const avatar = getGsaAvatar(post.author_name);
+            const gsaInfo = getGsaDetails(post.author_name);
             const relativeTime = formatTime(post.created_at);
             
             return `
               <div class="post-card" style="--accent-color: ${colors.main}; --accent-color-transparent: ${colors.bg};">
-                <div class="post-image-wrapper">
+                <div class="post-image-wrapper" onclick="openLightbox('${post.image_path}')" title="Click to maximize flyer">
                   <img src="${post.image_path}" class="post-image" alt="GSA Post Image" loading="lazy" onerror="this.src='/images/gsas/Google Gemini Logo on White.png'">
                 </div>
                 <div class="post-content">
                   <p class="post-caption">${post.caption}</p>
                   <div class="post-footer">
-                    <img src="${avatar}" class="author-avatar" alt="${post.author_name}" onerror="this.src='/images/gsas/Gemini Sparkle.png'">
+                    <a href="${gsaInfo.linkedin}" target="_blank" title="View ${post.author_name}'s LinkedIn Profile" style="display: flex; align-items: center; border-radius: 50%; outline: none; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                      <img src="${gsaInfo.avatar}" class="author-avatar" alt="${post.author_name}" onerror="this.src='/images/gsas/Gemini Sparkle.png'" style="cursor: pointer;">
+                    </a>
                     <div class="author-details">
                       <span class="author-name">${post.author_name}</span>
                       <div class="post-meta">
                         <span>${relativeTime}</span>
-                        <span class="meta-badge">${post.language || 'GSA'}</span>
+                        <span class="meta-badge">${gsaInfo.dept}</span>
                       </div>
                     </div>
                   </div>
