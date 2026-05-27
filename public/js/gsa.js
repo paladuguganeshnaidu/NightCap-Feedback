@@ -618,6 +618,67 @@ const fileToBase64 = (file) => {
   });
 };
 
+// Premium success popup modal notification
+const showSuccessPopup = () => {
+  if (!document.getElementById('pulseSuccessStyle')) {
+    const style = document.createElement('style');
+    style.id = 'pulseSuccessStyle';
+    style.textContent = `
+      @keyframes pulseSuccess {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.4); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(52, 168, 83, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 168, 83, 0); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'successPopupModal';
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999; opacity: 0; transition: opacity 0.4s ease;
+    font-family: 'Inter', sans-serif;
+  `;
+  
+  modal.innerHTML = `
+    <div style="background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; padding: 2.5rem; width: 90%; max-width: 420px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.4); transform: scale(0.85); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+      <div style="width: 70px; height: 70px; background: rgba(52, 168, 83, 0.15); border: 2.5px solid #34a853; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; animation: pulseSuccess 2s infinite;">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.6rem; color: white;">Post Published!</h3>
+      <p style="font-size: 0.95rem; color: rgba(255,255,255,0.75); line-height: 1.5; margin-bottom: 2rem;">Your announcement is now live on the public Updates Feed.</p>
+      <button id="closeSuccessPopupBtn" style="background: linear-gradient(135deg, #4285F4 0%, #9b72cb 100%); color: white; border: none; padding: 0.8rem 2rem; font-size: 0.95rem; font-weight: 700; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3); width: 100%; transition: transform 0.2s ease;">
+        Done
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  setTimeout(() => {
+    modal.style.opacity = '1';
+    modal.children[0].style.transform = 'scale(1)';
+  }, 50);
+
+  const closeModal = () => {
+    modal.style.opacity = '0';
+    modal.children[0].style.transform = 'scale(0.85)';
+    setTimeout(() => {
+      modal.remove();
+    }, 400);
+  };
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+  
+  modal.querySelector('#closeSuccessPopupBtn').addEventListener('click', closeModal);
+};
+
 const postForm = document.getElementById('postForm');
 const postCaption = document.getElementById('postCaption');
 const postSpinner = document.getElementById('postSpinner');
@@ -642,38 +703,94 @@ if (postForm) {
     const submitBtn = postForm.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     if (postSpinner) postSpinner.style.display = 'inline-block';
+    
+    // Set up step-by-step progress tracking UI inside postMsg
+    postMsg.style.display = 'block';
+    postMsg.style.color = 'var(--text-color)';
+    postMsg.innerHTML = `
+      <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 1rem; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.6rem; text-align: left; font-size: 0.88rem; font-weight: normal; font-family: 'Inter', sans-serif;">
+        <div id="step-size" style="display: flex; align-items: center; gap: 10px; transition: all 0.3s ease;">
+          <span class="icon">🔄</span> <span class="text">Checking file size...</span>
+        </div>
+        <div id="step-optimize" style="display: flex; align-items: center; gap: 10px; opacity: 0.4; transition: all 0.3s ease;">
+          <span class="icon">⚡</span> <span class="text">Optimizing image size (if >2MB)...</span>
+        </div>
+        <div id="step-encode" style="display: flex; align-items: center; gap: 10px; opacity: 0.4; transition: all 0.3s ease;">
+          <span class="icon">📦</span> <span class="text">Encoding image to Base64...</span>
+        </div>
+        <div id="step-publish" style="display: flex; align-items: center; gap: 10px; opacity: 0.4; transition: all 0.3s ease;">
+          <span class="icon">🚀</span> <span class="text">Publishing to Updates Feed...</span>
+        </div>
+      </div>
+    `;
+
+    const setStep = (id, status, textOverride = '') => {
+      const stepEl = document.getElementById(id);
+      if (!stepEl) return;
+      const iconEl = stepEl.querySelector('.icon');
+      const textEl = stepEl.querySelector('.text');
+      
+      if (status === 'active') {
+        stepEl.style.opacity = '1';
+        stepEl.style.color = 'var(--gemini-blue)';
+        stepEl.style.fontWeight = 'bold';
+        iconEl.textContent = '🔄';
+        if (textOverride) textEl.textContent = textOverride;
+      } else if (status === 'success') {
+        stepEl.style.opacity = '0.9';
+        stepEl.style.color = 'var(--gemini-green)';
+        stepEl.style.fontWeight = 'normal';
+        iconEl.textContent = '✅';
+        if (textOverride) textEl.textContent = textOverride;
+      } else if (status === 'skipped') {
+        stepEl.style.opacity = '0.5';
+        stepEl.style.fontWeight = 'normal';
+        iconEl.textContent = '⏭️';
+        if (textOverride) textEl.textContent = textOverride;
+      }
+    };
+
+    // Step 1: Check size
+    await new Promise(r => setTimeout(r, 400));
+    setStep('step-size', 'success');
+
+    // Step 2: Optimize image
+    setStep('step-optimize', 'active');
+    await new Promise(r => setTimeout(r, 400));
 
     let fileToUpload = file;
     if (file.size > 2 * 1024 * 1024) {
-      postMsg.style.display = 'block';
-      postMsg.style.color = 'var(--gemini-blue)';
-      postMsg.textContent = 'Optimizing image for upload...';
+      setStep('step-optimize', 'active', `Optimizing image size (${(file.size / (1024 * 1024)).toFixed(1)}MB)...`);
       try {
         fileToUpload = await compressImage(file);
+        setStep('step-optimize', 'success', `Optimized successfully (${(fileToUpload.size / (1024 * 1024)).toFixed(1)}MB)`);
       } catch (err) {
         console.error('Image compression failed, using original file:', err);
+        setStep('step-optimize', 'skipped', 'Optimization failed, using original file');
       }
+    } else {
+      setStep('step-optimize', 'skipped', 'Optimization skipped (under 2MB)');
     }
-    
-    postMsg.style.display = 'block';
-    postMsg.style.color = 'var(--gemini-blue)';
-    postMsg.textContent = 'Preparing image data...';
+
+    // Step 3: Encode image
+    setStep('step-encode', 'active');
+    await new Promise(r => setTimeout(r, 400));
     
     let base64Image = '';
     try {
       base64Image = await fileToBase64(fileToUpload);
+      setStep('step-encode', 'success');
     } catch (err) {
-      postMsg.style.color = 'var(--gemini-red)';
-      postMsg.textContent = 'Failed to process image data.';
+      postMsg.innerHTML = '<div style="color: var(--gemini-red); font-weight: bold; margin-top: 0.5rem;">Failed to process image data.</div>';
       submitBtn.disabled = false;
       if (postSpinner) postSpinner.style.display = 'none';
       return;
     }
+
+    // Step 4: Publish post
+    setStep('step-publish', 'active');
     
     try {
-      postMsg.textContent = 'Publishing post...';
-      postMsg.style.color = 'var(--text-color)';
-
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: {
@@ -689,23 +806,24 @@ if (postForm) {
         data = await res.json();
       }
       
-      postMsg.style.display = 'block';
-      
       if (res.ok && data && data.success) {
-        postMsg.style.color = 'var(--gemini-green)';
-        postMsg.textContent = 'Post published successfully!';
+        setStep('step-publish', 'success');
+        await new Promise(r => setTimeout(r, 300));
+        
+        postMsg.style.display = 'none';
         postForm.reset();
         if (imagePreviewContainer) imagePreviewContainer.style.display = 'none';
         if (imagePreview) imagePreview.src = '';
-        fetchGsaPosts(); // Reload posts
+        
+        // Show our beautiful premium success pop-up modal!
+        showSuccessPopup();
+        
+        fetchGsaPosts(); // Reload posts list
       } else {
-        postMsg.style.color = 'var(--gemini-red)';
-        postMsg.textContent = (data && data.message) || `Failed to publish post (Status ${res.status}).`;
+        postMsg.innerHTML = `<div style="color: var(--gemini-red); font-weight: bold; margin-top: 0.5rem;">${(data && data.message) || `Failed to publish post (Status ${res.status}).`}</div>`;
       }
     } catch (err) {
-      postMsg.style.display = 'block';
-      postMsg.style.color = 'var(--gemini-red)';
-      postMsg.textContent = 'Connection error while publishing post. Please try again.';
+      postMsg.innerHTML = '<div style="color: var(--gemini-red); font-weight: bold; margin-top: 0.5rem;">Connection error while publishing post. Please try again.</div>';
     } finally {
       submitBtn.disabled = false;
       if (postSpinner) postSpinner.style.display = 'none';
