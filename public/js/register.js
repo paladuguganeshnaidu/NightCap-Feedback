@@ -35,14 +35,17 @@ const adminChoiceSelect = document.getElementById('adminChoice');
 
 if (notNcetStudentCheckbox) {
   notNcetStudentCheckbox.addEventListener('change', (e) => {
+    const wrapper = document.getElementById('usnInputWrapper');
     if (e.target.checked) {
       usnInput.removeAttribute('required');
       usnInput.value = '';
+      if (wrapper) wrapper.style.display = 'none';
       branchTag.classList.remove('show');
       usnError.classList.remove('show');
       usnInput.classList.remove('valid', 'invalid');
     } else {
       usnInput.setAttribute('required', 'required');
+      if (wrapper) wrapper.style.display = 'block';
     }
   });
 }
