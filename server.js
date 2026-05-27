@@ -9,7 +9,6 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const xss = require('xss');
 const fs = require('fs');
-const multer = require('multer');
 
 dotenv.config();
 
@@ -141,7 +140,8 @@ const logAction = async (action, details) => {
 // Middleware
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 // Redirect .html requests to clean URLs and preserve query strings
 app.use((req, res, next) => {
   if (req.path.endsWith('.html')) {
@@ -170,43 +170,7 @@ app.use(async (req, res, next) => {
 
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
-// Ensure upload and backup directories exist
-const uploadDir = path.join(__dirname, 'public', 'uploads');
-const backupDir = path.join(__dirname, 'backups', 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-if (!fs.existsSync(backupDir)) {
-  fs.mkdirSync(backupDir, { recursive: true });
-}
 
-// Multer setup for secure photo uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, 'post-' + uniqueSuffix + ext);
-  }
-});
-
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
-  fileFilter: (req, file, cb) => {
-    const allowedExts = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'];
-    
-    if (allowedExts.includes(ext) && allowedMimeTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only images (.png, .jpg, .jpeg, .webp, .gif) are allowed!'));
-    }
-  }
-});
 
 const submitLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
@@ -721,46 +685,28 @@ app.put('/api/ar/registration/:id', authenticateARToken, async (req, res) => {
 
 // --- GSA POSTS ROUTES ---
 
-app.post('/api/posts', authenticateARToken, (req, res) => {
-  upload.single('image')(req, res, async (err) => {
-    if (err) {
-      return res.status(400).json({ success: false, message: err.message });
-    }
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No image uploaded' });
-    }
+app.post('/api/posts', authenticateARToken, async (req, res) => {
+  let { caption, image } = req.body;
+  if (!caption || !image) {
+    return res.status(400).json({ success: false, message: 'Image and caption are required.' });
+  }
+
+  caption = xss(caption).trim();
+  if (!image.startsWith('data:image/')) {
+    return res.status(400).json({ success: false, message: 'Invalid image format.' });
+  }
+
+  try {
+    // Insert post into database directly storing the base64 image URL in image_path
+    const query = 'INSERT INTO posts (caption, image_path, admin_gid) VALUES ($1, $2, $3) RETURNING *';
+    const { rows } = await pool.query(query, [caption, image, req.user.gid]);
     
-    let caption = req.body.caption || '';
-    caption = xss(caption).trim();
-    
-    if (!caption) {
-      // Delete the uploaded file if validation fails
-      try { fs.unlinkSync(req.file.path); } catch(e) {}
-      return res.status(400).json({ success: false, message: 'Caption is required' });
-    }
-    
-    const filename = req.file.filename;
-    const relativePath = '/uploads/' + filename;
-    const finalBackupPath = path.join(backupDir, filename);
-    
-    try {
-      // Copy file to secure backups directory immediately (VPS filesystem backup)
-      fs.copyFileSync(req.file.path, finalBackupPath);
-      
-      // Insert post into database
-      const query = 'INSERT INTO posts (caption, image_path, admin_gid) VALUES ($1, $2, $3) RETURNING *';
-      const { rows } = await pool.query(query, [caption, relativePath, req.user.gid]);
-      
-      logAction('Create Post', `AR Admin ${req.user.name} (${req.user.gid}) created post ID ${rows[0].id}`);
-      res.json({ success: true, message: 'Post uploaded successfully', data: rows[0] });
-    } catch (dbErr) {
-      console.error('Post creation database error:', dbErr);
-      // Cleanup local files on failure
-      try { fs.unlinkSync(req.file.path); } catch(e) {}
-      try { fs.unlinkSync(finalBackupPath); } catch(e) {}
-      res.status(500).json({ success: false, message: 'Database error while saving post.' });
-    }
-  });
+    logAction('Create Post', `AR Admin ${req.user.name} (${req.user.gid}) created post ID ${rows[0].id}`);
+    res.json({ success: true, message: 'Post uploaded successfully', data: rows[0] });
+  } catch (dbErr) {
+    console.error('Post creation database error:', dbErr);
+    res.status(500).json({ success: false, message: 'Database error while saving post.' });
+  }
 });
 
 app.get('/api/posts', async (req, res) => {
@@ -772,23 +718,6 @@ app.get('/api/posts', async (req, res) => {
       ORDER BY p.created_at DESC
     `;
     const { rows } = await pool.query(query);
-    
-    // Self-healing check (restoration from backup if missing in public uploads)
-    for (const post of rows) {
-      const filename = path.basename(post.image_path);
-      const publicPath = path.join(uploadDir, filename);
-      const backupPath = path.join(backupDir, filename);
-      
-      if (!fs.existsSync(publicPath) && fs.existsSync(backupPath)) {
-        try {
-          fs.copyFileSync(backupPath, publicPath);
-          console.log(`[Self-Healing] Restored missing file from backup: ${filename}`);
-        } catch (restoreErr) {
-          console.error(`[Self-Healing] Failed to restore file ${filename}:`, restoreErr);
-        }
-      }
-    }
-    
     res.json({ success: true, data: rows });
   } catch (err) {
     console.error('Fetch posts error:', err);
@@ -823,13 +752,6 @@ app.delete('/api/posts/:id', authenticateARToken, async (req, res) => {
     
     // Delete from database
     await pool.query('DELETE FROM posts WHERE id = $1', [postId]);
-    
-    // Delete from public uploads
-    const filename = path.basename(post.image_path);
-    const publicPath = path.join(uploadDir, filename);
-    if (fs.existsSync(publicPath)) {
-      try { fs.unlinkSync(publicPath); } catch (e) {}
-    }
     
     logAction('Delete Post', `AR Admin ${req.user.name} (${req.user.gid}) deleted post ID ${postId}`);
     res.json({ success: true, message: 'Post deleted successfully.' });

@@ -608,6 +608,16 @@ const compressImage = (file, maxSize = 2 * 1024 * 1024) => {
   });
 };
 
+// Helper to convert File to Base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 const postForm = document.getElementById('postForm');
 const postCaption = document.getElementById('postCaption');
 const postSpinner = document.getElementById('postSpinner');
@@ -645,22 +655,32 @@ if (postForm) {
       }
     }
     
-    const formData = new FormData();
-    formData.append('image', fileToUpload);
-    formData.append('caption', caption);
+    postMsg.style.display = 'block';
+    postMsg.style.color = 'var(--gemini-blue)';
+    postMsg.textContent = 'Preparing image data...';
+    
+    let base64Image = '';
+    try {
+      base64Image = await fileToBase64(fileToUpload);
+    } catch (err) {
+      postMsg.style.color = 'var(--gemini-red)';
+      postMsg.textContent = 'Failed to process image data.';
+      submitBtn.disabled = false;
+      if (postSpinner) postSpinner.style.display = 'none';
+      return;
+    }
     
     try {
-      // Clear optimization message and show posting status
-      postMsg.style.display = 'block';
-      postMsg.style.color = 'var(--text-color)';
       postMsg.textContent = 'Publishing post...';
+      postMsg.style.color = 'var(--text-color)';
 
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: formData
+        body: JSON.stringify({ caption, image: base64Image })
       });
       
       let data;
@@ -680,16 +700,12 @@ if (postForm) {
         fetchGsaPosts(); // Reload posts
       } else {
         postMsg.style.color = 'var(--gemini-red)';
-        if (res.status === 413) {
-          postMsg.textContent = 'Image file is too large (Max 2MB).';
-        } else {
-          postMsg.textContent = (data && data.message) || `Failed to publish post (Status ${res.status}).`;
-        }
+        postMsg.textContent = (data && data.message) || `Failed to publish post (Status ${res.status}).`;
       }
     } catch (err) {
       postMsg.style.display = 'block';
       postMsg.style.color = 'var(--gemini-red)';
-      postMsg.textContent = 'Connection error while publishing post. Please check the file size and try again.';
+      postMsg.textContent = 'Connection error while publishing post. Please try again.';
     } finally {
       submitBtn.disabled = false;
       if (postSpinner) postSpinner.style.display = 'none';
