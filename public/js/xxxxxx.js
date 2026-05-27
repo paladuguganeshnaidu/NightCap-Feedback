@@ -56,6 +56,7 @@ const showDashboard = () => {
   fetchConfig();
   fetchAdmins();
   fetchAllRegistrations();
+  fetchSuperPosts();
 };
 
 loginForm.addEventListener('submit', async (e) => {
@@ -355,4 +356,80 @@ const renderAllRegistrations = (registrations) => {
 
 if (refreshRegsBtn) {
   refreshRegsBtn.addEventListener('click', fetchAllRegistrations);
+}
+
+// --- Post Management functionality ---
+const superPostsContainer = document.getElementById('superPostsContainer');
+const refreshPostsBtn = document.getElementById('refreshPostsBtn');
+
+const fetchSuperPosts = async () => {
+  try {
+    if (superPostsContainer) {
+      superPostsContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1; opacity: 0.6; padding: 2rem 0;">Loading posts...</p>';
+    }
+    const res = await fetch('/api/posts');
+    const data = await res.json();
+    if (data.success) {
+      renderSuperPosts(data.data);
+    } else {
+      if (superPostsContainer) {
+        superPostsContainer.innerHTML = '<p style="color: var(--gemini-red); text-align: center; grid-column: 1/-1; padding: 2rem 0;">Failed to load posts.</p>';
+      }
+    }
+  } catch(e) {
+    if (superPostsContainer) {
+      superPostsContainer.innerHTML = '<p style="color: var(--gemini-red); text-align: center; grid-column: 1/-1; padding: 2rem 0;">Error loading posts.</p>';
+    }
+  }
+};
+
+const renderSuperPosts = (posts) => {
+  if (!superPostsContainer) return;
+  if (!posts || posts.length === 0) {
+    superPostsContainer.innerHTML = '<p style="text-align: center; grid-column: 1/-1; opacity: 0.6; padding: 2rem 0;">No posts found.</p>';
+    return;
+  }
+
+  superPostsContainer.innerHTML = posts.map(post => `
+    <div class="glass" style="border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.15); transition: transform 0.3s ease;">
+      <div style="width: 100%; padding-top: 56.25%; position: relative; background: rgba(0,0,0,0.1);">
+        <img src="${post.image_path}" alt="Post image" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover;">
+      </div>
+      <div style="padding: 1rem; display: flex; flex-direction: column; flex-grow: 1;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <span style="font-size: 0.8rem; font-weight: bold; color: var(--gemini-purple); background: rgba(155, 114, 203, 0.15); padding: 0.2rem 0.5rem; border-radius: 4px;">
+            By ${post.author_name}
+          </span>
+        </div>
+        <p style="font-size: 0.9rem; margin-bottom: 1rem; flex-grow: 1; white-space: pre-wrap; line-height: 1.5; color: var(--text-color);">${post.caption}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.8rem; margin-top: auto;">
+          <span style="font-size: 0.75rem; opacity: 0.6;">${new Date(post.created_at).toLocaleDateString()}</span>
+          <button class="btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: var(--gemini-red); color: var(--gemini-red); border-radius: 6px;" onclick="deleteSuperPost(${post.id})">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+};
+
+window.deleteSuperPost = async (id) => {
+  if (!confirm('Are you sure you want to permanently delete this post as Super Admin? This cannot be undone.')) return;
+  const token = localStorage.getItem('superToken');
+  try {
+    const res = await fetch(`/api/super/posts/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      fetchSuperPosts();
+    } else {
+      alert(data.message || 'Failed to delete post.');
+    }
+  } catch (err) {
+    alert('Network error while deleting post.');
+  }
+};
+
+if (refreshPostsBtn) {
+  refreshPostsBtn.addEventListener('click', fetchSuperPosts);
 }

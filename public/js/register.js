@@ -16,6 +16,7 @@ const usnInput = document.getElementById('usn');
 const nameInput = document.getElementById('name');
 const mobileInput = document.getElementById('mobile');
 const emailInput = document.getElementById('email');
+const notNcetStudentCheckbox = document.getElementById('notNcetStudent');
 
 const branchTag = document.getElementById('branchTag');
 const usnError = document.getElementById('usnError');
@@ -31,6 +32,20 @@ const formContainer = document.getElementById('formContainer');
 const successState = document.getElementById('successState');
 const assignedAdminText = document.getElementById('assignedAdminText');
 const adminChoiceSelect = document.getElementById('adminChoice');
+
+if (notNcetStudentCheckbox) {
+  notNcetStudentCheckbox.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      usnInput.removeAttribute('required');
+      usnInput.value = '';
+      branchTag.classList.remove('show');
+      usnError.classList.remove('show');
+      usnInput.classList.remove('valid', 'invalid');
+    } else {
+      usnInput.setAttribute('required', 'required');
+    }
+  });
+}
 
 const loadAdmins = async () => {
   const languageChoiceSelect = document.getElementById('languageChoice');
@@ -115,6 +130,14 @@ usnInput.addEventListener('input', (e) => {
   const val = e.target.value.toUpperCase().replace(/\s+/g, '');
   e.target.value = val;
   
+  const isNotNcet = notNcetStudentCheckbox && notNcetStudentCheckbox.checked;
+  if (isNotNcet) {
+    usnInput.className = '';
+    branchTag.classList.remove('show');
+    usnError.classList.remove('show');
+    return;
+  }
+  
   if (val.length === 0) {
     usnInput.className = '';
     branchTag.classList.remove('show');
@@ -141,6 +164,9 @@ usnInput.addEventListener('input', (e) => {
 });
 
 usnInput.addEventListener('blur', () => {
+  const isNotNcet = notNcetStudentCheckbox && notNcetStudentCheckbox.checked;
+  if (isNotNcet) return;
+  
   const val = usnInput.value.replace(/\s+/g, '');
   if (val && !usnRegex.test(val)) {
     usnError.classList.add('show');
@@ -250,8 +276,15 @@ form.addEventListener('submit', async (e) => {
   const languageChoiceSelect = document.getElementById('languageChoice');
   const languageChoice = languageChoiceSelect && languageChoiceSelect.closest('.input-group').style.display !== 'none' ? languageChoiceSelect.value : '';
 
+  const isNotNcet = notNcetStudentCheckbox && notNcetStudentCheckbox.checked;
+
   let isValid = true;
-  if (!usnRegex.test(usn)) { usnError.classList.add('show'); isValid = false; }
+  if (!isNotNcet) {
+    if (!usnRegex.test(usn)) { usnError.classList.add('show'); isValid = false; }
+  } else {
+    usnError.classList.remove('show');
+  }
+  
   if (!nameRegex.test(name)) { nameError.classList.add('show'); isValid = false; }
   if (!mobileRegex.test(mobile)) { mobileError.classList.add('show'); isValid = false; }
   if (!emailRegex.test(email)) { 
@@ -300,7 +333,6 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-
 const languageChoiceSelectNode = document.getElementById('languageChoice');
 if (languageChoiceSelectNode) {
   languageChoiceSelectNode.addEventListener('change', async (e) => {
@@ -322,4 +354,3 @@ if (languageChoiceSelectNode) {
     }
   });
 }
-

@@ -9,14 +9,24 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const xss = require('xss');
 const fs = require('fs');
+const crypto = require('crypto');
 
 dotenv.config();
 
 const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecretgeminikey';
+
+// Enforce strong cryptographically secure random defaults if env is missing
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString('hex');
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+
+if (!process.env.ADMIN_PASSWORD) {
+  console.warn("⚠️ SECURITY WARNING: ADMIN_PASSWORD environment variable is not set! A temporary secure password has been generated:", ADMIN_PASSWORD);
+}
+if (!process.env.JWT_SECRET) {
+  console.warn("⚠️ SECURITY WARNING: JWT_SECRET environment variable is not set! A dynamic secure key has been generated to prevent token forgery.");
+}
 
 // Verify DATABASE_URL exists
 if (!process.env.DATABASE_URL) {
@@ -43,7 +53,7 @@ const initDB = async () => {
       
       CREATE TABLE IF NOT EXISTS registrations (
         id SERIAL PRIMARY KEY,
-        usn TEXT UNIQUE NOT NULL,
+        usn TEXT UNIQUE,
         name TEXT NOT NULL,
         mobile TEXT NOT NULL,
         email TEXT NOT NULL,
@@ -97,6 +107,7 @@ const initDB = async () => {
     await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS redirect_url TEXT;`);
     await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;`);
     await pool.query(`ALTER TABLE registrations ADD COLUMN IF NOT EXISTS reg_id TEXT UNIQUE;`);
+    await pool.query(`ALTER TABLE registrations ALTER COLUMN usn DROP NOT NULL;`);
     // Seed admins individually to ensure all 10 exist
     const adminsToSeed = [
       { gid: '3082', name: 'Ganesh Naidu', max_count: 30, language: 'English' },
@@ -399,9 +410,9 @@ app.get('/api/public/preview-gsa', async (req, res) => {
 // --- REGISTRATION ROUTES ---
 app.post('/api/register', submitLimiter, async (req, res) => {
   let { usn, name, mobile, email, adminChoice, languageChoice } = req.body;
-  if (!usn || !name || !mobile || !email) return res.status(400).json({ success: false, message: 'All fields are required.' });
+  if (!name || !mobile || !email) return res.status(400).json({ success: false, message: 'Name, Mobile, and Email are required.' });
   
-  usn = xss(usn).replace(/\s+/g, '');
+  usn = usn ? xss(usn).replace(/\s+/g, '') : '';
   name = xss(name);
   mobile = xss(mobile);
   email = xss(email);
@@ -411,16 +422,19 @@ app.post('/api/register', submitLimiter, async (req, res) => {
     return res.status(400).json({ success: false, message: 'Invalid email format.' });
   }
 
-  const usnRegex = /^1NC\d{2}([A-Z]{2,3})\d{2,3}$/i;
-  const match = usn.toUpperCase().match(usnRegex);
-  if (!match) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
-  const department = match[1].toUpperCase();
+  let department = 'NON-NCET';
+  if (usn !== '') {
+    const usnRegex = /^1NC\d{2}([A-Z]{2,3})\d{2,3}$/i;
+    const match = usn.toUpperCase().match(usnRegex);
+    if (!match) return res.status(400).json({ success: false, message: 'Invalid USN format.' });
+    department = match[1].toUpperCase();
+  }
 
   try {
     const { rows: branchRows } = await pool.query("SELECT value FROM config WHERE key = 'allowed_branches'");
     const allowedBranchesStr = branchRows.length > 0 ? branchRows[0].value.trim() : 'CS,CI,CD,IS,EC,EE,ME,CV';
     
-    if (allowedBranchesStr !== '') {
+    if (allowedBranchesStr !== '' && usn !== '') {
       const allowedBranches = allowedBranchesStr.split(',').map(b => b.trim().toUpperCase());
       if (!allowedBranches.includes(department)) {
         return res.status(400).json({ success: false, message: `Registrations from branch ${department} are currently not allowed.` });
@@ -494,7 +508,7 @@ app.post('/api/register', submitLimiter, async (req, res) => {
     }
 
     await pool.query('INSERT INTO registrations (reg_id, usn, name, mobile, email, department, admin_gid) VALUES ($1, $2, $3, $4, $5, $6, $7)', 
-      [reg_id, usn.toUpperCase(), name.trim(), mobile.trim(), email.trim(), department, assignedGid]);
+      [reg_id, usn !== '' ? usn.toUpperCase() : null, name.trim(), mobile.trim(), email.trim(), department, assignedGid]);
 
     res.json({ success: true, message: `Successfully registered! Assigned Admin: ${adminInfo.name} (${assignedGid})` });
   } catch (err) {
@@ -639,9 +653,13 @@ app.delete('/api/ar/registration/:id', authenticateARToken, async (req, res) => 
 
 app.post('/api/ar/registration', authenticateARToken, async (req, res) => {
   let { usn, name, mobile, email, department } = req.body;
-  if (!usn || !name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'All fields are required.' });
+  if (!name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'Name, Mobile, Email, and Department are required.' });
   
-  usn = xss(usn).replace(/\s+/g, ''); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
+  usn = usn ? xss(usn).replace(/\s+/g, '') : '';
+  name = xss(name);
+  mobile = xss(mobile);
+  email = xss(email);
+  department = xss(department);
   
   try {
     // Check limit
@@ -658,7 +676,7 @@ app.post('/api/ar/registration', authenticateARToken, async (req, res) => {
     }
 
     await pool.query('INSERT INTO registrations (reg_id, usn, name, mobile, email, department, admin_gid) VALUES ($1, $2, $3, $4, $5, $6, $7)', 
-      [reg_id, usn.toUpperCase(), name.trim(), mobile.trim(), email.trim(), department.toUpperCase(), req.user.gid]);
+      [reg_id, usn !== '' ? usn.toUpperCase() : null, name.trim(), mobile.trim(), email.trim(), department.toUpperCase(), req.user.gid]);
     res.json({ success: true, message: 'Registration added successfully' });
   } catch (err) {
     if (err.code === '23505') return res.status(409).json({ success: false, message: "This USN is already registered." });
@@ -668,13 +686,14 @@ app.post('/api/ar/registration', authenticateARToken, async (req, res) => {
 
 app.put('/api/ar/registration/:id', authenticateARToken, async (req, res) => {
   let { usn, name, mobile, email, department } = req.body;
-  if (!usn || !name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'All fields are required.' });
+  if (!name || !mobile || !email || !department) return res.status(400).json({ success: false, message: 'Name, Mobile, Email, and Department are required.' });
   
-  usn = xss(usn).replace(/\s+/g, ''); name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
+  usn = usn ? xss(usn).replace(/\s+/g, '') : '';
+  name = xss(name); mobile = xss(mobile); email = xss(email); department = xss(department);
   
   try {
     const result = await pool.query('UPDATE registrations SET usn=$1, name=$2, mobile=$3, email=$4, department=$5 WHERE id=$6 AND admin_gid=$7', 
-      [usn.toUpperCase(), name.trim(), mobile.trim(), email.trim(), department.toUpperCase(), req.params.id, req.user.gid]);
+      [usn !== '' ? usn.toUpperCase() : null, name.trim(), mobile.trim(), email.trim(), department.toUpperCase(), req.params.id, req.user.gid]);
     if(result.rowCount === 0) return res.status(404).json({ success: false, message: 'Not found or no permission' });
     res.json({ success: true, message: 'Registration updated successfully' });
   } catch (err) {
@@ -842,6 +861,24 @@ app.delete('/api/super/clear-registrations', authenticateToken, async (req, res)
     logAction('Clear Data', 'Super Admin cleared ALL registrations');
     res.json({ success: true, message: 'All registrations deleted successfully' });
   } catch(e) { res.status(500).json({ success: false, message: 'Database error' }); }
+});
+
+app.delete('/api/super/posts/:id', authenticateToken, async (req, res) => {
+  const postId = req.params.id;
+  try {
+    const checkQuery = 'SELECT * FROM posts WHERE id = $1';
+    const { rows: checkRows } = await pool.query(checkQuery, [postId]);
+    if (checkRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Post not found.' });
+    }
+    
+    await pool.query('DELETE FROM posts WHERE id = $1', [postId]);
+    logAction('Delete Post (Super Admin)', `Super Admin deleted post ID ${postId}`);
+    res.json({ success: true, message: 'Post deleted successfully.' });
+  } catch (err) {
+    console.error('Super Admin delete post error:', err);
+    res.status(500).json({ success: false, message: 'Database error.' });
+  }
 });
 
 app.get('/sitemap.xml', (req, res) => {
