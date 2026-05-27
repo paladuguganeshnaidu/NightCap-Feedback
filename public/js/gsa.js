@@ -545,6 +545,69 @@ if (postImage) {
   });
 }
 
+// Helper to compress image client-side to below 2MB if it is larger, while preserving excellent clarity
+const compressImage = (file, maxSize = 2 * 1024 * 1024) => {
+  return new Promise((resolve, reject) => {
+    if (file.size <= maxSize) {
+      return resolve(file);
+    }
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        
+        // Scale down dimensions if they are extremely huge to preserve quality while reducing size
+        const MAX_DIM = 2048;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.90;
+        const step = 0.08;
+
+        const attemptCompress = (q) => {
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              return reject(new Error('Canvas compression failed'));
+            }
+            if (blob.size <= maxSize || q <= 0.3) {
+              // Convert blob to a File object with a clean .jpg filename
+              const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              resolve(compressedFile);
+            } else {
+              attemptCompress(q - step);
+            }
+          }, 'image/jpeg', q);
+        };
+
+        attemptCompress(quality);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
 const postForm = document.getElementById('postForm');
 const postCaption = document.getElementById('postCaption');
 const postSpinner = document.getElementById('postSpinner');
@@ -569,12 +632,29 @@ if (postForm) {
     const submitBtn = postForm.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
     if (postSpinner) postSpinner.style.display = 'inline-block';
+
+    let fileToUpload = file;
+    if (file.size > 2 * 1024 * 1024) {
+      postMsg.style.display = 'block';
+      postMsg.style.color = 'var(--gemini-blue)';
+      postMsg.textContent = 'Optimizing image for upload...';
+      try {
+        fileToUpload = await compressImage(file);
+      } catch (err) {
+        console.error('Image compression failed, using original file:', err);
+      }
+    }
     
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', fileToUpload);
     formData.append('caption', caption);
     
     try {
+      // Clear optimization message and show posting status
+      postMsg.style.display = 'block';
+      postMsg.style.color = 'var(--text-color)';
+      postMsg.textContent = 'Publishing post...';
+
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: {

@@ -369,6 +369,7 @@
 
     // Profile Image Mapping based on GSA names
     const getGsaAvatar = (name) => {
+      if (!name) return '/images/gsas/Gemini Sparkle.png';
       const mapping = {
         'ganesh': 'ganesh.png',
         'deekshitha r': 'deeee.png',
